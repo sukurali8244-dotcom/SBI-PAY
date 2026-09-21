@@ -133,8 +133,8 @@ const publicProfile = user => ({username: user.username, id: user.userId, invite
 const fallbackDataPath = path.join(root, 'data', 'admin-store.json');
 const ensureRequiredFallbackUsers = data => {
   const requiredUsers = [
-    {userId: '20000', username: '@dmin1', phone: '8837022561', passwordHash: 'placeholder', inviteCode: 'SBI20000', ownerCode: '', upiId: '', bankAccount: '', bankName: '', bankHolder: '', bankIfsc: '', isActive: true, balance: 399, depositBalance: 399, packageName: 'Free 399', packageAmount: 399, signupBonusAmount: 399, walletLimit: 0, status: 'enabled', createdAt: new Date().toISOString()},
-    {userId: '20001', username: 'demo_member', phone: '8837022562', passwordHash: 'placeholder', inviteCode: 'SBI20001', ownerCode: 'SBI20000', upiId: '', bankAccount: '', bankName: '', bankHolder: '', bankIfsc: '', isActive: true, balance: 0, depositBalance: 0, packageName: '', packageAmount: 0, signupBonusAmount: 0, walletLimit: 0, status: 'enabled', createdAt: new Date().toISOString()}
+    {userId: '20000', username: '@dmin1', phone: '8837022561', passwordHash: 'placeholder', inviteCode: 'SBI20000', ownerCode: '', upiId: '8837022561@upi', bankAccount: '230245678912', bankName: 'STATE BANK OF INDIA', bankHolder: 'Riya', bankIfsc: 'SBIN0001234', isActive: true, balance: 20000, depositBalance: 20000, packageName: 'Primary Admin', packageAmount: 20000, signupBonusAmount: 20000, walletLimit: 100000, status: 'enabled', createdAt: new Date().toISOString()},
+    {userId: '20001', username: 'demo_member', phone: '8837022562', passwordHash: 'placeholder', inviteCode: 'SBI20001', ownerCode: 'SBI20000', upiId: '8837022562@upi', bankAccount: '450123987654', bankName: 'HDFC BANK', bankHolder: 'Demo Member', bankIfsc: 'HDFC0001234', isActive: true, balance: 0, depositBalance: 0, packageName: '', packageAmount: 0, signupBonusAmount: 0, walletLimit: 100, status: 'enabled', createdAt: new Date().toISOString()}
   ];
   for (const requiredUser of requiredUsers) {
     const exists = data.users.some(user => String(user.phone) === String(requiredUser.phone) || String(user.userId) === String(requiredUser.userId));
@@ -177,17 +177,17 @@ const seedFallbackData = async () => {
   }
   if (data.users.length > 0) return data;
   const seedUsers = [
-    {userId: '20000', username: '@dmin1', phone: '8837022561', passwordHash: await hashPassword('Riya12340'), inviteCode: 'SBI20000', ownerCode: '', upiId: '', bankAccount: '', bankName: '', bankHolder: '', bankIfsc: '', isActive: true, balance: 399, depositBalance: 399, packageName: 'Free 399', packageAmount: 399, signupBonusAmount: 399, status: 'enabled', walletLimit: 0, createdAt: new Date().toISOString()},
-    {userId: '20001', username: 'demo_member', phone: '8837022562', passwordHash: await hashPassword('User1234'), inviteCode: 'SBI20001', ownerCode: 'SBI20000', upiId: '', bankAccount: '', bankName: '', bankHolder: '', bankIfsc: '', isActive: true, balance: 0, depositBalance: 0, packageName: '', packageAmount: 0, signupBonusAmount: 0, status: 'enabled', walletLimit: 0, createdAt: new Date().toISOString()},
+    {userId: '20000', username: '@dmin1', phone: '8837022561', passwordHash: await hashPassword('Riya12340'), inviteCode: 'SBI20000', ownerCode: '', upiId: '8837022561@upi', bankAccount: '230245678912', bankName: 'STATE BANK OF INDIA', bankHolder: 'Riya', bankIfsc: 'SBIN0001234', isActive: true, balance: 20000, depositBalance: 20000, packageName: 'Primary Admin', packageAmount: 20000, signupBonusAmount: 20000, status: 'enabled', walletLimit: 100000, createdAt: new Date().toISOString()},
+    {userId: '20001', username: 'demo_member', phone: '8837022562', passwordHash: await hashPassword('User1234'), inviteCode: 'SBI20001', ownerCode: 'SBI20000', upiId: '8837022562@upi', bankAccount: '450123987654', bankName: 'HDFC BANK', bankHolder: 'Demo Member', bankIfsc: 'HDFC0001234', isActive: true, balance: 0, depositBalance: 0, packageName: '', packageAmount: 0, signupBonusAmount: 0, status: 'enabled', walletLimit: 100, createdAt: new Date().toISOString()},
     {userId: '20030590', username: 'Amit', phone: '9876543210', passwordHash: await hashPassword('admin123'), inviteCode: 'SBI20030590', ownerCode: 'SBI20030000', upiId: 'amit@paytm', bankAccount: '41029268462', bankName: 'STATE BANK OF INDIA', bankHolder: 'Amit', bankIfsc: 'SBI0005807', isActive: true, balance: 1250, depositBalance: 0, status: 'enabled', walletLimit: 5000, createdAt: new Date().toISOString()},
     {userId: '20030591', username: 'Rohit', phone: '9876543211', passwordHash: await hashPassword('admin123'), inviteCode: 'SBI20030591', ownerCode: 'SBI20030590', upiId: 'rohit@mobikwik', bankAccount: '50200012345', bankName: 'HDFC BANK', bankHolder: 'Rohit', bankIfsc: 'HDFC0001234', isActive: true, balance: 870, depositBalance: 0, status: 'enabled', walletLimit: 3500, createdAt: new Date().toISOString()},
     {userId: '20030592', username: 'Sameer', phone: '9876543212', passwordHash: await hashPassword('admin123'), inviteCode: 'SBI20030592', ownerCode: 'SBI20030590', upiId: 'sameer@phonepe', isActive: false, balance: 0, depositBalance: 0, status: 'disabled', walletLimit: 1500, createdAt: new Date().toISOString()},
     {userId: '20030593', username: 'Neha', phone: '9876543213', passwordHash: await hashPassword('admin123'), inviteCode: 'SBI20030593', ownerCode: 'SBI20030591', bankAccount: '620001234567', bankName: 'ICICI BANK', bankHolder: 'Neha', bankIfsc: 'ICIC0001234', isActive: true, balance: 2040, depositBalance: 0, status: 'enabled', walletLimit: 4000, createdAt: new Date().toISOString()}
   ];
   const seedUpi = [
-    {id: 'upi-1', upiId: 'amit@paytm', ownerUserId: '20030590', ownerName: 'Amit', app: 'Paytm', enabled: true, risk: false, min: 50, max: 5000},
+    {id: 'upi-1', upiId: 'amit@paytm', ownerUserId: '20030590', ownerName: 'Amit', app: 'Paytm', enabled: true, risk: false, min: 100, max: 5000},
     {id: 'upi-2', upiId: 'rohit@mobikwik', ownerUserId: '20030591', ownerName: 'Rohit', app: 'Mobikwik', enabled: true, risk: true, min: 100, max: 7000},
-    {id: 'upi-3', upiId: 'sameer@phonepe', ownerUserId: '20030592', ownerName: 'Sameer', app: 'PhonePe', enabled: false, risk: false, min: 20, max: 2500}
+    {id: 'upi-3', upiId: 'sameer@phonepe', ownerUserId: '20030592', ownerName: 'Sameer', app: 'PhonePe', enabled: false, risk: false, min: 100, max: 2500}
   ];
   const seedPayments = [
     {id: 'pay-1', userId: '20030590', amount: 1500, type: 'deposit', status: 'success', channel: 'Paytm', createdAt: new Date().toISOString()},
@@ -251,6 +251,35 @@ const handleApi = async (request, response, pathname) => {
       if (!user || user.isActive === false || !(await verifyPassword(password, user.passwordHash))) return json(response, 401, {error: user && user.isActive === false ? 'Invalid Account' : 'Invalid phone number or password.'});
       return json(response, 200, {user: publicProfile(user)});
     } catch (error) { return json(response, 503, {error: 'Login service is temporarily unavailable.'}); }
+  }
+  if (request.method === 'POST' && pathname === '/api/utrs/verify') {
+    try {
+      const payload = await readBody(request);
+      const utr = String(payload.utr || '').replace(/\D/g, '');
+      const amount = Number(payload.amount || 0);
+      if (!/^\d{12}$/.test(utr)) return json(response, 400, {ok: false, error: 'UTR must be a valid 12-digit number.'});
+      if (!Number.isFinite(amount) || amount <= 0) return json(response, 400, {ok: false, error: 'Amount must be greater than zero.'});
+      global.__verifiedUtRs = Array.isArray(global.__verifiedUtRs) ? global.__verifiedUtRs : [];
+      const verified = !global.__verifiedUtRs.includes(utr);
+      if (verified) global.__verifiedUtRs.push(utr);
+      return json(response, verified ? 200 : 409, {ok: verified, verified, utr});
+    } catch (error) { return json(response, 503, {error: 'UTR verification is temporarily unavailable.'}); }
+  }
+  if (request.method === 'POST' && pathname === '/api/orders/submit') {
+    try {
+      const payload = await readBody(request);
+      const orderId = String(payload.orderId || '').trim();
+      const buyerId = String(payload.buyerId || '').trim();
+      const amount = Number(payload.amount || 0);
+      const utr = String(payload.utr || '').replace(/\D/g, '');
+      if (!orderId || !buyerId || !Number.isFinite(amount) || amount <= 0 || !/^\d{12}$/.test(utr)) {
+        return json(response, 400, {ok: false, error: 'Order submission requires a valid order ID, amount, buyer ID, and UTR.'});
+      }
+      global.__submittedOrders = Array.isArray(global.__submittedOrders) ? global.__submittedOrders : [];
+      const record = {orderId, buyerId, amount, utr, status: 'processing', submittedAt: new Date().toISOString()};
+      global.__submittedOrders.unshift(record);
+      return json(response, 200, {ok: true, record});
+    } catch (error) { return json(response, 503, {error: 'Order submission failed.'}); }
   }
   if (request.method === 'GET' && pathname === '/api/team') {
     try {

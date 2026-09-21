@@ -47,6 +47,7 @@
   const orderId=params.get('order')||`ORD${Date.now()}`;
   const amount=Math.max(0,Number(params.get('amount')||0));
   const defaultApp=params.get('app')||'Paytm';
+  const sellerName=params.get('seller')||'Seller';
   const readUpis=()=>{try{return JSON.parse(localStorage.getItem('sbiPayWalletUpi')||'[]').filter(item=>item.enabled!==false)}catch(error){return []}};
   const upis=readUpis().length?readUpis():[{app:'Mobikwik',upiId:'8837022561'},{app:'Paytm',upiId:'8837022561'}];
   const iconFor=app=>app.toLowerCase().includes('paytm')?'https://cdn.iconscout.com/icon/free/png-256/free-paytm-3521643-2945092.png':app.toLowerCase().includes('mobi')?'https://s3.ap-south-1.amazonaws.com/mobikwik-images/images/mobikwik_logo.png':'https://cdn-icons-png.flaticon.com/512/2721/2721064.png';
@@ -55,8 +56,10 @@
   const list=document.getElementById('upi-list');
   list.innerHTML=upis.map((item,index)=>`<label class="upi-option"><img src="${iconFor(item.app||'UPI')}" alt="${item.app||'UPI'}"><span><strong>${item.app||'UPI'}</strong><small>${item.upiId||''}</small></span><input type="radio" name="upi" value="${index}" ${((item.app||'').toLowerCase()===defaultApp.toLowerCase()||(!defaultApp&&index===0))?'checked':''}></label>`).join('');
   if(!list.querySelector('input:checked'))list.querySelector('input').checked=true;
-  sbiPayTransactions.upsertPurchase(orderId,amount,{app:upis[Number(list.querySelector('input:checked')?.value||0)]?.app||defaultApp});
-  document.getElementById('confirm-claim').addEventListener('click',()=>{const selected=list.querySelector('input:checked');if(!selected){document.getElementById('claim-message').textContent='Select a UPI payment option.';return}const selectedUpi=upis[Number(selected.value)];sbiPayTransactions.upsertPurchase(orderId,amount,{app:selectedUpi.app||'UPI',upiId:selectedUpi.upiId||''});location.href=`deposit_buy.html?order=${encodeURIComponent(orderId)}&amount=${encodeURIComponent(amount)}&app=${encodeURIComponent(selectedUpi.app||'UPI')}&upi=${encodeURIComponent(selectedUpi.upiId||'')}&type=INR`});
+  const selectedFromMarket = sbiPayTransactions.readMarketOrders().find(item => String(item.id) === String(orderId) || String(item.code) === String(orderId));
+  const selectedSeller = selectedFromMarket?.seller || {name:sellerName, upiId: params.get('upi')||'Not provided', app: defaultApp, bankName: params.get('bank') || 'STATE BANK OF INDIA', accountNumber: params.get('account') || '41029268462', ifsc: params.get('ifsc') || 'SBI0005807'};
+  sbiPayTransactions.upsertPurchase(orderId,amount,{app:selectedSeller.app||defaultApp,upiId:selectedSeller.upiId||params.get('upi')||'',holderName:selectedSeller.holderName||selectedSeller.name||sellerName,bankName:selectedSeller.bankName||'STATE BANK OF INDIA',accountNumber:selectedSeller.accountNumber||'41029268462',ifsc:selectedSeller.ifsc||'SBI0005807'});
+  document.getElementById('confirm-claim').addEventListener('click',()=>{const selected=list.querySelector('input:checked');if(!selected){document.getElementById('claim-message').textContent='Select a UPI payment option.';return}const selectedUpi=upis[Number(selected.value)];const nextSeller={...selectedSeller, app:selectedUpi.app||selectedSeller.app||defaultApp, upiId:selectedUpi.upiId||selectedSeller.upiId||'Not provided'};sbiPayTransactions.upsertPurchase(orderId,amount,{app:nextSeller.app||'UPI',upiId:nextSeller.upiId||'',holderName:nextSeller.holderName||nextSeller.name||sellerName,bankName:nextSeller.bankName||'STATE BANK OF INDIA',accountNumber:nextSeller.accountNumber||'41029268462',ifsc:nextSeller.ifsc||'SBI0005807'});location.href=`deposit_buy.html?order=${encodeURIComponent(orderId)}&amount=${encodeURIComponent(amount)}&app=${encodeURIComponent(nextSeller.app||'UPI')}&upi=${encodeURIComponent(nextSeller.upiId||'Not provided')}&seller=${encodeURIComponent(nextSeller.holderName||nextSeller.name||sellerName)}&bank=${encodeURIComponent(nextSeller.bankName||'STATE BANK OF INDIA')}&account=${encodeURIComponent(nextSeller.accountNumber||'41029268462')}&ifsc=${encodeURIComponent(nextSeller.ifsc||'SBI0005807')}&type=INR`});
 </script>
 </body>
 </html>

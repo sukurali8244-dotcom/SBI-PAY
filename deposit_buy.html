@@ -34,16 +34,47 @@
 </main>
 <div class="confirm-backdrop" id="confirm-backdrop"><section class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title"><h2 id="confirm-title">Cancel this order?</h2><p>The order will be marked as Canceled in your transaction history.</p><div class="confirm-actions"><button class="keep-order" id="keep-order" type="button">No, Keep It</button><button class="confirm-cancel" id="confirm-cancel" type="button">Yes, Cancel</button></div></section></div>
 <script>
-const params=new URLSearchParams(location.search);const orderId=params.get('order')||`ORD${Date.now()}`;const amount=Math.max(0,Number(params.get('amount')||0));const app=params.get('app')||'UPI';const sellerUpi=params.get('upi')||'Not provided';const profile=JSON.parse(localStorage.getItem('sbiPayProfile')||'null');const buyerName=profile?.username||localStorage.getItem('sbiPayUsername')||'New User';const buyerId=profile?.id||localStorage.getItem('sbiPayUserId')||'-';let buyerUpi='Not provided';try{const buyerUpis=JSON.parse(localStorage.getItem('sbiPayWalletUpi')||'[]').filter(item=>item.enabled!==false);buyerUpi=buyerUpis[0]?.upiId||'Not provided'}catch(error){}document.getElementById('purchase-amount').textContent=`₹ ${amount.toFixed(2)}`;document.getElementById('buyer-name').textContent=buyerName;document.getElementById('buyer-id').textContent=buyerId;document.getElementById('buyer-upi').textContent=buyerUpi;document.getElementById('seller-upi').textContent=sellerUpi;sbiPayTransactions.upsertPurchase(orderId,amount,{app,upiId:sellerUpi});const message=document.getElementById('submit-message');const payButton=document.getElementById('go-to-pay');const makeUpiUrl=()=>{const query=`pa=${encodeURIComponent(sellerUpi)}&pn=${encodeURIComponent('NUR SALAM ALI')}&am=${encodeURIComponent(amount.toFixed(2))}&cu=INR`;const appName=app.toLowerCase();if(appName.includes('google'))return `tez://upi/pay?${query}`;if(appName.includes('phonepe'))return `phonepe://pay?${query}`;if(appName.includes('bhim'))return `bhim://upi/pay?${query}`;return `upi://pay?${query}`};payButton.addEventListener('click',()=>{if(sellerUpi==='Not provided'){message.textContent='Seller UPI ID is not available.';return}window.location.href=makeUpiUrl();setTimeout(()=>{message.textContent='If the UPI app did not open, use your UPI app to pay the seller UPI ID shown above.'},1200)});const proof=document.getElementById('payment-proof');const utr=document.getElementById('utr-number');document.getElementById('submit-order').addEventListener('click',()=>{if(!proof.files.length||!proof.files[0].type.startsWith('image/')){message.textContent='Please upload a valid payment screenshot.';return}if(!/^\d{12}$/.test(utr.value.trim())){message.textContent='Enter a valid 12-digit UTR number.';return}if(!sbiPayTransactions.completePurchase(orderId,utr.value.trim())){message.textContent='This UTR is invalid or has already been used.';return}message.style.color='#0b9862';message.textContent='Payment verified successfully.';document.getElementById('submit-order').disabled=true;setTimeout(()=>{location.href='dashboard.html'},500)});const backdrop=document.getElementById('confirm-backdrop');document.getElementById('cancel-order').addEventListener('click',()=>backdrop.classList.add('open'));document.getElementById('keep-order').addEventListener('click',()=>backdrop.classList.remove('open'));document.getElementById('confirm-cancel').addEventListener('click',()=>{const canceled=sbiPayTransactions.cancelPurchase(orderId);backdrop.classList.remove('open');if(canceled){message.style.color='#0b9862';message.textContent='Order canceled.';document.getElementById('submit-order').disabled=true;payButton.disabled=true}else{message.textContent='This order can no longer be canceled.'}});backdrop.addEventListener('click',event=>{if(event.target===backdrop)backdrop.classList.remove('open')});
+const params=new URLSearchParams(location.search);
+const orderId=params.get('order')||`ORD${Date.now()}`;
+const amount=Math.max(0,Number(params.get('amount')||0));
+const app=params.get('app')||'UPI';
+const sellerUpi=params.get('upi')||'Not provided';
+const sellerName=params.get('seller')||'NUR SALAM ALI';
+const sellerBank=params.get('bank')||'STATE BANK OF INDIA';
+const sellerAccount=params.get('account')||'41029268462';
+const sellerIfsc=params.get('ifsc')||'SBI0005807';
+const profile=JSON.parse(localStorage.getItem('sbiPayProfile')||'null');
+const buyerName=profile?.username||localStorage.getItem('sbiPayUsername')||'New User';
+const buyerId=profile?.id||localStorage.getItem('sbiPayUserId')||'-';
+let buyerUpi='Not provided';
+try{const buyerUpis=JSON.parse(localStorage.getItem('sbiPayWalletUpi')||'[]').filter(item=>item.enabled!==false);buyerUpi=buyerUpis[0]?.upiId||'Not provided'}catch(error){}
+document.getElementById('purchase-amount').textContent=`₹ ${amount.toFixed(2)}`;
+document.getElementById('buyer-name').textContent=buyerName;
+document.getElementById('buyer-id').textContent=buyerId;
+document.getElementById('buyer-upi').textContent=buyerUpi;
+document.getElementById('seller-upi').textContent=sellerUpi;
+document.getElementById('seller-holder').textContent=sellerName;
+document.getElementById('seller-bank').textContent=sellerBank;
+document.getElementById('seller-account').textContent=sellerAccount;
+document.getElementById('seller-ifsc').textContent=sellerIfsc;
+sbiPayTransactions.upsertPurchase(orderId,amount,{app,upiId:sellerUpi,holderName:sellerName,bankName:sellerBank,accountNumber:sellerAccount,ifsc:sellerIfsc});
+const message=document.getElementById('submit-message');
+const payButton=document.getElementById('go-to-pay');
+const makeUpiUrl=()=>{const query=`pa=${encodeURIComponent(sellerUpi)}&pn=${encodeURIComponent(sellerName)}&am=${encodeURIComponent(amount.toFixed(2))}&cu=INR`;const appName=app.toLowerCase();if(appName.includes('google'))return `tez://upi/pay?${query}`;if(appName.includes('phonepe'))return `phonepe://pay?${query}`;if(appName.includes('bhim'))return `bhim://upi/pay?${query}`;return `upi://pay?${query}`;};
+payButton.addEventListener('click',()=>{if(sellerUpi==='Not provided'){message.textContent='Seller UPI ID is not available.';return}window.location.href=makeUpiUrl();setTimeout(()=>{message.textContent='If the UPI app did not open, use your UPI app to pay the seller UPI ID shown above.'},1200)});
+const proof=document.getElementById('payment-proof');
+const utr=document.getElementById('utr-number');
+const submitButton=document.getElementById('submit-order');
+submitButton.addEventListener('click',()=>{const proofFile=proof.files[0];if(!proofFile){message.textContent='Upload a payment screenshot before submitting.';return}const validation=sbiPayTransactions.verifyUtr(utr.value,amount,orderId);if(!validation.verified){message.textContent=validation.reason;return}const record=sbiPayTransactions.upsertPurchase(orderId,amount,{app,upiId:sellerUpi,holderName:sellerName,bankName:sellerBank,accountNumber:sellerAccount,ifsc:sellerIfsc});record.status='processing';record.utr=validation.utr;record.proofName=proofFile.name;record.submittedAt=new Date().toISOString();const queue=sbiPayTransactions.read();const index=queue.findIndex(item=>item.orderId===orderId&&item.direction==='purchase');if(index>=0)queue[index]=record;sbiPayTransactions.write(queue);sbiPayTransactions.submitOrder({orderId,amount,buyerName,buyerId,seller:{name:sellerName,holderName:sellerName,upiId:sellerUpi,app,bankName:sellerBank,accountNumber:sellerAccount,ifsc:sellerIfsc},utr:validation.utr,app,proofName:proofFile.name});message.textContent='Payment submitted successfully. The order is pending seller verification.';setTimeout(()=>{window.location.href='dashboard.html';},1400);});
+document.getElementById('cancel-order')?.addEventListener('click',()=>{document.getElementById('confirm-backdrop').classList.add('open')});
+document.getElementById('keep-order')?.addEventListener('click',()=>document.getElementById('confirm-backdrop').classList.remove('open'));document.getElementById('confirm-cancel')?.addEventListener('click',()=>{sbiPayTransactions.cancelPurchase(orderId);document.getElementById('confirm-backdrop').classList.remove('open');window.location.href='payment.html';});
+
 </script>
 <script>
 const sellerDetails=document.querySelector('.seller-details');sellerDetails?.querySelectorAll('.detail').forEach(detail=>{const value=detail.querySelector('strong');if(!value)return;const copyButton=document.createElement('button');copyButton.className='copy-detail';copyButton.type='button';copyButton.textContent='▣';copyButton.setAttribute('aria-label',`Copy ${detail.querySelector('span')?.textContent||'seller detail'}`);copyButton.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(value.textContent.trim())}catch(error){window.prompt('Copy this seller detail:',value.textContent.trim());return}copyButton.textContent='✓';copyButton.classList.add('copied');setTimeout(()=>{copyButton.textContent='▣';copyButton.classList.remove('copied')},1200)});detail.append(copyButton)});
 </script>
 <script>
 document.querySelectorAll('.seller-details .copy-detail').forEach(copyButton=>copyButton.addEventListener('click',event=>{event.stopImmediatePropagation();const value=copyButton.closest('.detail').querySelector('strong').textContent.trim();const fallback=document.createElement('textarea');fallback.value=value;fallback.setAttribute('readonly','');fallback.style.position='fixed';fallback.style.opacity='0';document.body.append(fallback);fallback.select();try{document.execCommand('copy')}catch(error){}fallback.remove();copyButton.textContent='✓';copyButton.classList.add('copied');setTimeout(()=>{copyButton.textContent='▣';copyButton.classList.remove('copied')},1200)},true));
-</script>
-<script>
-document.getElementById('confirm-cancel')?.addEventListener('click',()=>setTimeout(()=>{location.href='payment.html'},0),true);
 </script>
 </body>
 </html>

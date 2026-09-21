@@ -160,7 +160,15 @@
     }
     .warning-text .alert{font-size:30px;vertical-align:middle;color:#1aa86f;margin-right:8px;display:inline-block}
 
-    .packs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:8px 0 18px}
+    .packs-wrap{
+      position:sticky;top:0;z-index:100;
+      background:rgba(238,241,242,.9);
+      backdrop-filter:blur(10px);
+      padding:10px 0 12px;
+      margin:0 -4px 10px;
+      display:flex;flex-direction:column;gap:10px;
+    }
+    .packs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:0}
     .pack-pill{
       background:#e8ebee;border-radius:18px;padding:16px 10px;text-align:center;
       color:#1c2f38;font-size:24px;font-weight:700;border:1px solid rgba(147,159,165,.08)
@@ -170,12 +178,12 @@
       background:#1ea66e;color:#fff;box-shadow:0 8px 18px rgba(31,166,110,.20);
     }
 
-    .order-search{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin:0 0 16px}
+    .order-search{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin:0}
     .order-search input{min-width:0;padding:13px 12px;border:1px solid #cbd7d9;border-radius:12px;background:#fff;color:var(--text);font:18px "Trebuchet MS",Arial,sans-serif}
     .order-search button{padding:0 16px;border:0;border-radius:12px;background:#1ea66e;color:#fff;font:700 18px "Trebuchet MS",Arial,sans-serif;cursor:pointer}
-    .order-count{margin:-6px 0 12px;color:var(--muted);font-size:16px;text-align:right}
+    .order-count{margin:-2px 0 12px;color:var(--muted);font-size:16px;text-align:right}
 
-    .promo-list{display:grid;gap:16px;padding:4px 4px 8px;max-height:52vh;min-height:180px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+    .promo-list{display:grid;gap:16px;padding:4px 4px 8px;min-height:180px;overflow:visible;overscroll-behavior:contain;scrollbar-gutter:stable}
     .promo-item{
       background:rgba(255,255,255,.42);border:1px solid rgba(103,120,129,.12);border-radius:18px;
       padding:16px 18px;
@@ -269,17 +277,19 @@
 
       <p class="warning-text"><span class="alert">⚠</span>Please use Freecharge or Mobikwik or Paytm wallet for payment!</p>
 
-      <div class="packs" aria-label="Order ranges">
-        <button class="pack-pill" type="button" data-range-min="10000" data-range-max="20000">10,000-20,000</button>
-        <button class="pack-pill active" type="button" data-range-min="5000" data-range-max="9999">5,000-9,999</button>
-        <button class="pack-pill" type="button" data-range-min="300" data-range-max="4000">300-4,000</button>
-      </div>
+      <div class="packs-wrap">
+        <div class="packs" aria-label="Order ranges">
+          <button class="pack-pill" type="button" data-range-min="10000" data-range-max="20000">10,000-20,000</button>
+          <button class="pack-pill active" type="button" data-range-min="5000" data-range-max="9999">5,000-9,999</button>
+          <button class="pack-pill" type="button" data-range-min="300" data-range-max="4000">300-4,000</button>
+        </div>
 
-      <form class="order-search" id="order-search" role="search">
-        <input id="minimum-value" type="number" min="0" step="1" placeholder="Minimum" aria-label="Minimum order amount">
-        <input id="maximum-value" type="number" min="0" step="1" placeholder="Maximum" aria-label="Maximum order amount">
-        <button type="submit">Search</button>
-      </form>
+        <form class="order-search" id="order-search" role="search">
+          <input id="minimum-value" type="number" min="0" step="1" placeholder="Minimum" aria-label="Minimum order amount">
+          <input id="maximum-value" type="number" min="0" step="1" placeholder="Maximum" aria-label="Maximum order amount">
+          <button type="submit">Search</button>
+        </form>
+      </div>
       <div class="order-count" id="order-count" aria-live="polite"></div>
 
       <section class="promo-list" id="promo-list" aria-live="polite"></section>
@@ -316,6 +326,20 @@
       return {amount, income: Number((amount * 0.05).toFixed(2)), code: `SBI${String(index + 1).padStart(3, '0')}`};
     });
 
+    const getMarketOrders = () => {
+      const market = window.sbiPayTransactions?.seedMarketOrders ? sbiPayTransactions.seedMarketOrders() : [];
+      if (market.length) {
+        return market.map(item => ({
+          amount: Number(item.amount || 0),
+          income: Number(((Number(item.amount || 0)) * 0.05).toFixed(2)),
+          code: String(item.id || `SBI${Date.now()}`),
+          seller: item.seller || {},
+          status: item.status || 'open'
+        }));
+      }
+      return packs;
+    };
+
     const renderMetrics = () => {
       document.getElementById('cashback-rate').textContent = Number(measures.cashbackRate).toFixed(1);
       document.getElementById('balance-value').textContent = Number(measures.balance).toFixed(1);
@@ -326,10 +350,18 @@
     let rotationOffset = 0;
     const visibleOrders = orders => orders;
 
-    const renderPacks = (orders = packs) => {
+    const renderPacks = (orders = getMarketOrders()) => {
       const list = document.getElementById('promo-list');
       document.getElementById('order-count').textContent = `${orders.length} orders in this range`;
-      list.innerHTML = visibleOrders(orders).map(item => `
+      list.innerHTML = visibleOrders(orders).map(item => {
+        const seller = item.seller || {};
+        const sellerName = encodeURIComponent(seller.holderName || seller.name || 'Seller');
+        const sellerBank = encodeURIComponent(seller.bankName || 'STATE BANK OF INDIA');
+        const sellerAccount = encodeURIComponent(seller.accountNumber || '41029268462');
+        const sellerIfsc = encodeURIComponent(seller.ifsc || 'SBI0005807');
+        const sellerUpi = encodeURIComponent(seller.upiId || 'Not provided');
+        const app = encodeURIComponent(seller.app || 'Paytm');
+        return `
         <article class="promo-item">
           <div class="promo-row">
             <div class="promo-label">INR</div>
@@ -338,10 +370,11 @@
           <div class="promo-row" style="grid-column:1 / -1;justify-content:space-between;align-items:center;">
             <div class="promo-value">₹ <span>${item.amount}</span></div>
             <div class="promo-income">Income:+${item.income}</div>
-            <a class="claim-btn" href="claim.html?order=${encodeURIComponent(item.code)}&amount=${item.amount}&app=Paytm">Claim</a>
+            <a class="claim-btn" href="claim.html?order=${encodeURIComponent(item.code)}&amount=${item.amount}&app=${app}&upi=${sellerUpi}&seller=${sellerName}&bank=${sellerBank}&account=${sellerAccount}&ifsc=${sellerIfsc}">Claim</a>
           </div>
         </article>
-      `).join('');
+      `;
+      }).join('');
     };
 
     const renderMemberMetrics = () => {
@@ -353,14 +386,33 @@
     };
 
     let selectedRange = {min: 5000, max: 9999};
+    const rangeSequence = [
+      {min: 5000, max: 9999},
+      {min: 10000, max: 20000},
+      {min: 300, max: 4000}
+    ];
+    let rangeIndex = 0;
+
     const renderFilteredPacks = () => {
       const minimum = Number(document.getElementById('minimum-value').value) || selectedRange.min;
       const maximum = Number(document.getElementById('maximum-value').value) || selectedRange.max;
-      renderPacks(packs.filter(item => item.amount >= minimum && item.amount <= maximum));
+      const source = getMarketOrders();
+      renderPacks(source.filter(item => item.amount >= minimum && item.amount <= maximum));
+    };
+
+    const rotateSector = () => {
+      rangeIndex = (rangeIndex + 1) % rangeSequence.length;
+      selectedRange = rangeSequence[rangeIndex];
+      document.getElementById('minimum-value').value = '';
+      document.getElementById('maximum-value').value = '';
+      const activeButton = document.querySelector(`[data-range-min="${selectedRange.min}"]`);
+      document.querySelectorAll('[data-range-min]').forEach(item => item.classList.toggle('active', item === activeButton));
+      renderFilteredPacks();
     };
 
     document.querySelectorAll('[data-range-min]').forEach(button => button.addEventListener('click', () => {
       selectedRange = {min: Number(button.dataset.rangeMin), max: Number(button.dataset.rangeMax)};
+      rangeIndex = rangeSequence.findIndex(item => item.min === selectedRange.min && item.max === selectedRange.max);
       document.querySelectorAll('[data-range-min]').forEach(item => item.classList.toggle('active', item === button));
       document.getElementById('minimum-value').value = '';
       document.getElementById('maximum-value').value = '';
@@ -374,6 +426,7 @@
     renderMetrics();
     renderMemberMetrics();
     renderFilteredPacks();
+    setInterval(rotateSector, 35000);
   </script>
 </body>
 </html>

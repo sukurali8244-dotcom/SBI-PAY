@@ -7,6 +7,11 @@
       "passwordHash": "$2a$10$7Bf37c2p728qAElDXnV02ef4ZBVdCpRJYrmKmuasnyEsxfVlTSTIS",
       "inviteCode": "SBI20001",
       "ownerCode": "SBI20000",
+      "upiId": "8837022562@upi",
+      "bankAccount": "450123987654",
+      "bankName": "HDFC BANK",
+      "bankHolder": "Demo Member",
+      "bankIfsc": "HDFC0001234",
       "isActive": true,
       "balance": 0,
       "depositBalance": 0,
@@ -14,7 +19,7 @@
       "packageAmount": 0,
       "signupBonusAmount": 0,
       "status": "enabled",
-      "walletLimit": 0,
+      "walletLimit": 100,
       "createdAt": "2026-09-21T20:31:02.104Z"
     },
     {
@@ -24,14 +29,19 @@
       "passwordHash": "$2a$10$6eSsgTpu1lrWGEyf4.G7xOiXzY/yKCnCtqOpgTtDMPiTErCccLFdC",
       "inviteCode": "SBI20000",
       "ownerCode": "",
+      "upiId": "8837022561@upi",
+      "bankAccount": "230245678912",
+      "bankName": "STATE BANK OF INDIA",
+      "bankHolder": "Riya",
+      "bankIfsc": "SBIN0001234",
       "isActive": true,
-      "balance": 399,
-      "depositBalance": 399,
-      "packageName": "Free 399",
-      "packageAmount": 399,
-      "signupBonusAmount": 399,
+      "balance": 20000,
+      "depositBalance": 20000,
+      "packageName": "Primary Admin",
+      "packageAmount": 20000,
+      "signupBonusAmount": 20000,
       "status": "enabled",
-      "walletLimit": 0,
+      "walletLimit": 100000,
       "createdAt": "2026-09-21T20:31:02.103Z"
     },
     {
@@ -115,7 +125,7 @@
       "app": "Paytm",
       "enabled": true,
       "risk": false,
-      "min": 50,
+      "min": 100,
       "max": 5000
     },
     {
@@ -137,7 +147,7 @@
       "app": "PhonePe",
       "enabled": false,
       "risk": false,
-      "min": 20,
+      "min": 100,
       "max": 2500
     }
   ],
