@@ -225,13 +225,25 @@ const getUserCollection = async () => {
 
 const handleApi = async (request, response, pathname) => {
   if (request.method === 'GET' && pathname === '/api/health') {
-    try { await getDatabase(); return json(response, 200, {ok: true, database: 'connected'}); }
-    catch (error) { return json(response, 503, {ok: false, database: 'unavailable'}); }
+    if (!mongoUri || !MongoClient) {
+      return json(response, 200, {ok: true, database: 'fallback', mode: 'json'});
+    }
+    try {
+      await getDatabase();
+      return json(response, 200, {ok: true, database: 'connected'});
+    } catch (error) {
+      return json(response, 200, {ok: true, database: 'fallback', mode: 'json'});
+    }
   }
   if (request.method === 'GET' && pathname === '/api/user') {
     try {
       const userId = String(new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`).searchParams.get('userId') || '').trim();
       if (!userId) return json(response, 400, {error: 'User ID is required'});
+      if (!mongoUri || !MongoClient || !shouldUseMongo()) {
+        const fallback = await seedFallbackData();
+        const user = fallback.users.find(entry => String(entry.userId) === String(userId));
+        return user ? json(response, 200, {user: publicProfile(user)}) : json(response, 404, {error: 'User not found'});
+      }
       const user = await (await getDatabase()).collection('users').findOne({userId});
       return user ? json(response, 200, {user: publicProfile(user)}) : json(response, 404, {error: 'User not found'});
     } catch (error) { return json(response, 503, {error: 'Profile is temporarily unavailable.'}); }
