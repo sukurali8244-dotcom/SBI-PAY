@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Buy Orders</title>
+<link rel="stylesheet" href="dashboard.css">
+<script src="transactions.js"></script>
+</head>
+<body class="orders-page">
+<main class="app-shell orders-shell">
+<header class="orders-header"><a href="dashboard.html" aria-label="Back">←</a><h1>Buy Orders</h1></header>
+<section class="orders-filters">
+<div class="filter-row time-filters" role="tablist" aria-label="Date range">
+<button class="active" data-range="7" role="tab" aria-selected="true" type="button">7 Days</button><button data-range="30" role="tab" aria-selected="false" type="button">30 Days</button><button data-range="90" role="tab" aria-selected="false" type="button">90 Days</button><button data-range="all" role="tab" aria-selected="false" type="button">All</button>
+</div>
+<div class="filter-row status-filters" role="tablist" aria-label="Order status">
+<button class="active" data-status="all" role="tab" aria-selected="true" type="button">All statuses <span>▼</span></button><button data-status="processing" role="tab" aria-selected="false" type="button">Processing</button><button data-status="success" role="tab" aria-selected="false" type="button">Success</button><button data-status="cancelled" role="tab" aria-selected="false" type="button">Cancelled</button><button data-status="timeout" role="tab" aria-selected="false" type="button">Timed Out</button>
+</div>
+</section>
+<div class="daily-total" id="daily-total"></div>
+<section class="order-list" id="buy-orders" aria-live="polite"></section>
+</main>
+<script>
+let range='7';
+let status='all';
+const list=document.getElementById('buy-orders');
+const total=document.getElementById('daily-total');
+const statusCounts=records=>records.reduce((counts,record)=>{counts[record.status]=(counts[record.status]||0)+1;return counts},{});
+const selectGroup=(selector,attribute,value)=>document.querySelectorAll(selector).forEach(button=>{const active=button.dataset[attribute]===value;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});
+const makeDropdown=(row,label)=>{const wrapper=document.createElement('div');wrapper.className='filter-dropdown';const trigger=document.createElement('button');trigger.className='filter-dropdown-trigger';trigger.type='button';trigger.textContent=label+' ▼';const menu=document.createElement('div');menu.className='filter-dropdown-menu';row.querySelectorAll('button').forEach(option=>{option.textContent=option.textContent.replace('▼','').trim();menu.append(option);option.addEventListener('click',()=>{trigger.textContent=option.textContent+' ▼';menu.classList.remove('open')})});trigger.addEventListener('click',event=>{event.stopPropagation();document.querySelectorAll('.filter-dropdown-menu.open').forEach(open=>{if(open!==menu)open.classList.remove('open')});menu.classList.toggle('open')});wrapper.append(trigger,menu);row.replaceWith(wrapper)};
+const renderOrders=records=>{const counts=statusCounts(records);const statusButtons=document.querySelectorAll('[data-status]');statusButtons.forEach(button=>{const value=button.dataset.status;const label=value==='all'?'All statuses':sbiPayTransactions.statusLabel(value);button.textContent=`${label} (${counts[value]||0})`});const cutoff=range==='all'?0:Date.now()-Number(range)*86400000;const visible=records.filter(record=>(range==='all'||new Date(record.date).getTime()>=cutoff)&&(status==='all'||record.status===status));total.textContent=`Visible deposits: ${visible.length}`;list.innerHTML=visible.length?visible.map(record=>`<article class="order-card status-${record.status}"><div class="order-card-top"><div class="order-code">code: <strong>${record.code||record.id}</strong><button class="copy-code" type="button" aria-label="Copy code">▤</button></div><span class="status-badge">• ${sbiPayTransactions.statusLabel(record.status)}</span></div><div class="order-amount">${sbiPayTransactions.amountLabel(record)}</div><div class="order-card-bottom"><time>${sbiPayTransactions.formatDate(record.date)}</time><a class="sell-button" href="dashboard.html">Sell</a></div></article>`).join(''):'<div class="empty-orders">No orders</div>';list.querySelectorAll('.copy-code').forEach(button=>button.addEventListener('click',()=>{const code=button.closest('.order-card').querySelector('.order-code strong').textContent;navigator.clipboard?.writeText(code);button.textContent='✓'}))};
+document.querySelectorAll('[data-range]').forEach(button=>button.addEventListener('click',()=>{range=button.dataset.range;selectGroup('[data-range]','range',range);renderOrders(sbiPayTransactions.read())}));
+document.querySelectorAll('[data-status]').forEach(button=>button.addEventListener('click',()=>{status=button.dataset.status;selectGroup('[data-status]','status',status);renderOrders(sbiPayTransactions.read())}));
+document.addEventListener('click',()=>document.querySelectorAll('.filter-dropdown-menu.open').forEach(menu=>menu.classList.remove('open')));
+makeDropdown(document.querySelector('.time-filters'),'Timeframe');
+makeDropdown(document.querySelector('.status-filters'),'Status');
+renderOrders(sbiPayTransactions.read());
+sbiPayTransactions.subscribe(renderOrders);
+</script>
+</body>
+</html>

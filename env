@@ -1,0 +1,3 @@
+MONGODB_URI=mongodb+srv://sukurali8244_db_user:DY965HeJPrZ3u8tV@cluster0.pnb9f9u.mongodb.net/?appName=Cluster0
+MONGODB_DB=sbipay
+PORT=10000

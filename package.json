@@ -1,0 +1,26 @@
+{
+  "name": "sbipay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SBI PAY static web application",
+  "scripts": {
+    "build": "node scripts/build-web.js",
+    "cap:sync": "npm run build && cap sync android",
+    "android:debug": "npm run cap:sync && cd android && gradlew.bat assembleDebug",
+    "android:release": "npm run cap:sync && cd android && gradlew.bat assembleRelease",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "dotenv": "^16.4.7",
+    "mongodb": "^6.12.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

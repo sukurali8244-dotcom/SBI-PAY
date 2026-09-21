@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Team</title>
+<link rel="stylesheet" href="dashboard.css">
+<script src="transactions.js"></script>
+<style>
+.team-page{background:#f4f7fd;color:#172231}.team-shell{width:min(100%,720px);padding:0 20px 90px;overflow:hidden}.team-header{height:130px;margin:0 -20px;background:#fff;display:flex;align-items:center;justify-content:center;position:relative}.team-header h1{margin:0;color:#129765;font-size:32px}.team-header a{position:absolute;left:20px;top:75px;color:#129765;text-decoration:none;font:44px/1 Arial,sans-serif}.team-card{margin-top:28px;border-radius:25px;background:#0baa67;padding:28px 20px 25px;color:#fff;box-shadow:0 7px 14px rgba(25,100,80,.12)}.team-card h2{margin:0;text-align:center;font-size:24px;font-weight:400}.team-total{margin:8px 0 10px;text-align:center;font-size:49px;font-weight:700}.team-metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px}.team-metric{min-height:82px;padding:10px 8px;border-radius:13px;background:#f6fbfa;color:#116f55;text-align:center}.team-metric span{display:block;color:#70777d;font-size:15px}.team-metric strong{display:block;margin-top:10px;font-size:23px}.team-section{margin-top:20px;border-radius:24px;background:#fff;box-shadow:0 4px 15px rgba(41,54,65,.08);overflow:hidden}.team-section-title{display:inline-block;margin:0;padding:10px 25px 11px;border-radius:0 25px 25px 0;background:#12996d;color:#fff;font-size:24px}.invite-body{padding:13px 20px 20px;background:#11966a}.invite-label{color:#fff;font-size:23px;font-weight:700}.invite-link{display:flex;align-items:center;gap:12px;margin-top:8px;padding:13px 20px;border-radius:30px;background:#0aae69;color:#fff}.invite-link strong{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:23px}.icon-button{width:35px;height:35px;border:0;border-radius:8px;background:transparent;color:#fff;font-size:23px;cursor:pointer}#copy-invite,#copy-code{position:relative;display:inline-flex;align-items:center;justify-content:center;width:31px;height:31px;padding:0;border:1px solid rgba(255,255,255,.5);border-radius:8px;background:rgba(255,255,255,.08);color:#fff;font-size:19px;cursor:pointer}#copy-invite::before,#copy-code::before{content:"";position:absolute;left:7px;top:6px;width:12px;height:12px;border:2px solid #fff;border-radius:3px;background:transparent}#copy-invite::after,#copy-code::after{content:"";position:absolute;left:12px;top:11px;width:12px;height:12px;border:2px solid #fff;border-radius:3px;background:rgba(255,255,255,.12)}#copy-invite:focus-visible,#copy-code:focus-visible{outline:2px solid #fff;outline-offset:2px}.invite-code{margin-top:8px;color:#e2fff4;font-size:14px;text-align:center}.team-section-inner{padding:20px}.team-section-inner h2{margin:0 0 17px;font-size:22px}.level-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.level-card{padding:13px 16px;border-radius:14px;background:#eaf7f2}.level-card h3{margin:0 0 12px;color:#12845f;font-size:28px;text-align:center}.level-card p{display:flex;justify-content:space-between;margin:8px 0;color:#626a70;font-size:15px}.level-card strong{color:#087b59}.share-title{font-size:23px!important}.share-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.share-button{min-width:0;padding:11px 4px;border:1px solid #edf0f2;border-radius:12px;background:#fafcfd;color:#202934;cursor:pointer;font:15px "Trebuchet MS",Arial,sans-serif}.share-icon{display:grid;place-items:center;width:52px;height:52px;margin:0 auto 9px;border-radius:50%;color:#fff;font-size:25px;font-weight:700}.telegram{background:#26a9e0}.facebook{background:#1977f3}.whatsapp{background:#24c85a}.copy{background:#7655f5}.members{display:grid;gap:0}.member-row{padding:12px 0;border-bottom:1px solid #e1e9e7}.member-row:last-child{border-bottom:0}.member-name{font-size:19px;font-weight:700}.member-meta{display:flex;justify-content:space-between;margin-top:7px;color:#7d858e;font-size:15px}.member-meta strong{color:#128d66}.empty-members{padding:8px 0;color:#818a90}.performance{min-height:220px}.chart-tabs{display:flex;justify-content:flex-end;gap:5px;margin-bottom:20px}.chart-tabs button{padding:9px 13px;border:0;border-radius:18px;background:#f5f5f5;color:#899097;font:15px "Trebuchet MS",Arial,sans-serif}.chart-tabs .active{background:#fff;color:#128d66;box-shadow:0 3px 8px rgba(30,50,50,.12)}.chart{height:130px;background:repeating-linear-gradient(to bottom,transparent 0,transparent 31px,#e6ebeb 32px);position:relative}.chart-labels{display:flex;justify-content:space-between;color:#889198;font-size:13px}@media(max-width:390px){.team-total{font-size:43px}.team-metric span{font-size:13px}.team-metric strong{font-size:21px}.share-button{font-size:13px}.share-icon{width:45px;height:45px;font-size:22px}}
+ .code-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;color:#e2fff4;font-size:14px}.code-row .icon-button{width:31px;height:31px;font-size:19px}.share-icon svg{width:29px;height:29px;display:block;fill:currentColor}.tier-title{margin:0 0 12px;color:#12845f;font-size:27px}.tier-count{margin:-5px 0 14px;color:#70777d;font-size:15px}.member-row.compact{padding:10px 0}.performance-value{margin:-6px 0 14px;color:#128d66;font-size:25px;font-weight:700}.performance-value small{color:#7d858e;font-size:15px;font-weight:400}
+</style>
+</head>
+<body class="team-page">
+<main class="app-shell team-shell">
+<header class="team-header"><a href="dashboard.html" aria-label="Back">←</a><h1>Team</h1></header>
+<section class="team-card"><h2>My Total Commissions:</h2><div class="team-total" id="total-commission">+0.00</div><div class="team-metrics"><div class="team-metric"><span>Tomorrow's Estimated Commission</span><strong id="tomorrow-commission">+0.00</strong></div><div class="team-metric"><span>Total Team Members</span><strong id="member-count">+0</strong></div><div class="team-metric"><span>Today's Earned Commission</span><strong id="today-commission">+0.00</strong></div><div class="team-metric"><span>Total Team Deposit</span><strong id="team-deposit">+0.00</strong></div></div></section>
+<section class="team-section"><h2 class="team-section-title">Invitation</h2><div class="invite-body"><div class="invite-label">Link</div><div class="invite-link"><strong id="invite-url"></strong><a class="icon-button" id="open-invite" aria-label="Open invitation link" target="_blank" rel="noopener">↗</a><button class="icon-button" id="copy-invite" type="button" aria-label="Copy invitation link">▣</button></div><div class="code-row">Invite code: <strong id="invite-code"></strong><button class="icon-button" id="copy-code" type="button" aria-label="Copy invite code">▣</button></div></div></section>
+<section class="team-section"><div class="team-section-inner"><h2 class="share-title">Share APP to</h2><div class="share-grid"><button class="share-button" data-share="telegram" type="button"><span class="share-icon telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 3.4 18.3 20c-.25 1.17-.9 1.46-1.83.91l-5.04-3.72-2.43 2.34c-.27.27-.5.5-1.02.5l.37-5.13 9.34-8.44c.4-.37-.09-.57-.62-.2L5.52 13.7.54 12.14c-1.08-.34-1.1-1.08.23-1.6L20.25 2.9c.9-.33 1.69.2 1.35.5Z"></path></svg></span>Telegram</button><button class="share-button" data-share="facebook" type="button"><span class="share-icon facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h3V4h-3c-3.31 0-5 1.69-5 5v3H6v4h3v8h4v-8h3.5l.5-4H13V9c0-.67.33-1 1-1Z"></path></svg></span>Facebook</button><button class="share-button" data-share="whatsapp" type="button"><span class="share-icon whatsapp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a9.9 9.9 0 0 0-8.56 14.9L2 22l5.25-1.38A10 10 0 1 0 12 2Zm0 18a8 8 0 0 1-4.08-1.12l-.3-.18-3.12.82.84-3.04-.2-.31A8 8 0 1 1 12 20Zm4.4-5.98c-.24-.12-1.4-.7-1.62-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-1.4-.7-2.32-1.25-3.24-2.82-.25-.43.25-.4.72-1.34.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.2-.47-.4-.4-.54-.4h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.68 2.57 4.06 3.6 1.51.65 2.1.7 2.85.59.46-.07 1.4-.57 1.6-1.12.2-.55.2-1.02.14-1.12-.06-.1-.22-.16-.46-.28Z"></path></svg></span>Whatsapp</button><button class="share-button" data-share="copy" type="button"><span class="share-icon copy"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 8a5 5 0 0 1 7.07 0l1.06 1.06-1.42 1.42-1.06-1.06a3 3 0 0 0-4.24 0l-2.12 2.12a3 3 0 0 0 0 4.24 3 3 0 0 0 4.24 0l.53-.53 1.42 1.42-.53.53A5 5 0 0 1 6.88 10.1L9 8Zm6 8a5 5 0 0 1-7.07 0l-1.06-1.06 1.42-1.42 1.06 1.06a3 3 0 0 0 4.24 0l2.12-2.12a3 3 0 0 0 0-4.24 3 3 0 0 0-4.24 0l-.53.53-1.42-1.42.53-.53a5 5 0 0 1 7.07 7.07L15 16Z"></path></svg></span>Copy link</button></div></div></section>
+<section class="team-section"><h2 class="team-section-title">My Team</h2><div class="team-section-inner"><div class="level-card"><h3 class="tier-title">Team A</h3><p class="tier-count">Account owner: <strong id="level-a-count">1</strong></p><div class="members" id="level-a-members"></div></div><div class="level-card" style="margin-top:12px"><h3 class="tier-title">Team B</h3><p class="tier-count">Direct members: <strong id="level-b-count">0</strong></p><div class="members" id="level-b-members"></div></div><div class="level-card" style="margin-top:12px"><h3 class="tier-title">Team C</h3><p class="tier-count">Members under Team B: <strong id="level-c-count">0</strong></p><div class="members" id="level-c-members"></div></div></div></section>
+<section class="team-section"><div class="team-section-inner performance"><h2>Performance</h2><div class="chart-tabs"><button data-period="day" type="button">Day</button><button data-period="week" type="button">Week</button><button class="active" data-period="month" type="button">Month</button></div><div class="performance-value" id="performance-value">+0.00 <small>this month</small></div><div class="chart"><div class="chart-labels"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div></div></div></section>
+</main>
+<script>
+const profile=JSON.parse(localStorage.getItem('sbiPayProfile')||'null');
+const userId=profile?.id||localStorage.getItem('sbiPayUserId')||'';
+if(!userId){window.location.href='login.html'}
+localStorage.setItem('sbiPayUserId',userId);
+const code=profile?.inviteCode||localStorage.getItem('sbiPayInviteCode')||`SBI${userId}`;
+localStorage.setItem('sbiPayInviteCode',code);
+const registerPath=new URL('register.html',location.href).href;
+const inviteUrl=`${registerPath}?ref=${encodeURIComponent(code)}`;
+document.getElementById('invite-code').textContent=code;
+document.getElementById('invite-url').textContent=inviteUrl;
+document.getElementById('open-invite').href=inviteUrl;
+const readJson=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch(error){return fallback}};
+const savedMembers=readJson('sbiPayTeamMembers',[]);
+const directMembers=savedMembers.filter(member=>member.ownerCode===code);
+const directCodes=new Set(directMembers.map(member=>member.inviteCode).filter(Boolean));
+const indirectMembers=savedMembers.filter(member=>directCodes.has(member.ownerCode));
+const members=[...directMembers,...indirectMembers];
+const memberMarkup=member=>`<div class="member-row compact"><div class="member-name">${member.username}</div><div class="member-meta"><span>ID: ${member.id}</span><strong>Level.${member.level}</strong></div></div>`;
+document.getElementById('level-a-count').textContent='1';
+document.getElementById('level-a-members').innerHTML=memberMarkup({username:profile?.username||localStorage.getItem('sbiPayUsername')||'New User',id:userId,level:'A'});
+document.getElementById('member-count').textContent=`+${members.length}`;
+document.getElementById('level-b-count').textContent=directMembers.length;
+document.getElementById('level-c-count').textContent=indirectMembers.length;
+document.getElementById('level-b-members').innerHTML=directMembers.map(memberMarkup).join('');
+document.getElementById('level-c-members').innerHTML=indirectMembers.map(memberMarkup).join('');
+const activity=member=>Number(member.activity||member.deposit||0);
+const teamSectionInner=document.querySelector('.team-section-title + .team-section-inner');
+const teamSectionCount=document.createElement('p');
+teamSectionCount.className='tier-count';
+teamSectionCount.innerHTML='Total team members: <strong>0</strong>';
+teamSectionInner?.prepend(teamSectionCount);
+let serverTeamLoaded=false;
+const syncUserStats=async()=>{try{const records=window.sbiPayTransactions?.read()||[];const deposits=records.filter(record=>record.direction==='receive'&&record.status==='success').reduce((sum,record)=>sum+Number(record.amount||0),0);const activity=records.filter(record=>record.status==='success').reduce((sum,record)=>sum+Number(record.amount||0),0);await fetch('/api/user/stats',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId,depositTotal:deposits,activity})})}catch(error){}};
+const loadTeamFromServer=async()=>{try{const response=await fetch(`/api/team?ownerCode=${encodeURIComponent(code)}`);if(!response.ok)return;const data=await response.json();serverTeamLoaded=true;const serverDirect=data.directMembers||[];const serverIndirect=data.indirectMembers||[];document.getElementById('level-b-members').innerHTML=serverDirect.map(memberMarkup).join('');document.getElementById('level-c-members').innerHTML=serverIndirect.map(memberMarkup).join('');document.getElementById('level-b-count').textContent=serverDirect.length;document.getElementById('level-c-count').textContent=serverIndirect.length;document.getElementById('member-count').textContent=`+${serverDirect.length+serverIndirect.length}`;teamSectionCount.querySelector('strong').textContent=serverDirect.length+serverIndirect.length;document.getElementById('team-deposit').textContent=`+${Number(data.totalDeposit||0).toFixed(2)}`}catch(error){}};
+syncUserStats();
+loadTeamFromServer();
+const directActivity=directMembers.reduce((sum,member)=>sum+activity(member),0);
+const indirectActivity=indirectMembers.reduce((sum,member)=>sum+activity(member),0);
+const referralCredits=readJson('sbiPayReferralCredits',[]).filter(item=>item.ownerCode===code&&item.status==='success');
+const referralCommission=referralCredits.reduce((sum,item)=>sum+Number(item.amount||0),0);
+const totalCommission=directActivity*0.003+indirectActivity*0.002+referralCommission;
+document.getElementById('total-commission').textContent=`+${totalCommission.toFixed(2)}`;
+document.getElementById('today-commission').textContent=`+${totalCommission.toFixed(2)}`;
+document.getElementById('tomorrow-commission').textContent=`+${totalCommission.toFixed(2)}`;
+document.getElementById('team-deposit').textContent=`+${(directActivity+indirectActivity).toFixed(2)}`;
+const refreshTeamMetrics=()=>{
+	if(serverTeamLoaded)return;
+	const currentMembers=readJson('sbiPayTeamMembers',[]);
+	const currentDirect=currentMembers.filter(member=>member.ownerCode===code);
+	const currentCodes=new Set(currentDirect.map(member=>member.inviteCode).filter(Boolean));
+	const currentIndirect=currentMembers.filter(member=>currentCodes.has(member.ownerCode));
+	document.getElementById('level-b-members').innerHTML=currentDirect.map(memberMarkup).join('');
+	document.getElementById('level-c-members').innerHTML=currentIndirect.map(memberMarkup).join('');
+	document.getElementById('level-b-count').textContent=currentDirect.length;
+	document.getElementById('level-c-count').textContent=currentIndirect.length;
+	const currentDirectActivity=currentDirect.reduce((sum,member)=>sum+activity(member),0);
+	const currentIndirectActivity=currentIndirect.reduce((sum,member)=>sum+activity(member),0);
+	const currentReferralCommission=readJson('sbiPayReferralCredits',[]).filter(item=>item.ownerCode===code&&item.status==='success').reduce((sum,item)=>sum+Number(item.amount||0),0);
+	const currentCommission=currentDirectActivity*0.003+currentIndirectActivity*0.002+currentReferralCommission;
+	document.getElementById('member-count').textContent=`+${currentDirect.length+currentIndirect.length}`;
+	teamSectionCount.querySelector('strong').textContent=currentDirect.length+currentIndirect.length;
+	document.getElementById('total-commission').textContent=`+${currentCommission.toFixed(2)}`;
+	document.getElementById('today-commission').textContent=`+${currentCommission.toFixed(2)}`;
+	document.getElementById('tomorrow-commission').textContent=`+${currentCommission.toFixed(2)}`;
+	document.getElementById('team-deposit').textContent=`+${(currentDirectActivity+currentIndirectActivity).toFixed(2)}`;
+};
+window.addEventListener('storage',refreshTeamMetrics);
+setInterval(refreshTeamMetrics,1000);
+setInterval(loadTeamFromServer,1000);
+setInterval(syncUserStats,5000);
+const copyInvite=async()=>{try{await navigator.clipboard.writeText(inviteUrl);document.getElementById('copy-invite').textContent='✓';setTimeout(()=>document.getElementById('copy-invite').textContent='▣',1200)}catch(error){window.prompt('Copy this invitation link:',inviteUrl)}};
+document.getElementById('copy-invite').addEventListener('click',copyInvite);
+document.getElementById('copy-code').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(code);document.getElementById('copy-code').textContent='✓';setTimeout(()=>document.getElementById('copy-code').textContent='▣',1200)}catch(error){window.prompt('Copy this invite code:',code)}});
+const performanceValues={day:'+0.70',week:'+14.20',month:'+68.76'};
+document.querySelectorAll('[data-period]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-period]').forEach(item=>item.classList.toggle('active',item===button));document.getElementById('performance-value').innerHTML=`${performanceValues[button.dataset.period]} <small>this ${button.dataset.period}</small>`}));
+document.querySelectorAll('[data-share]').forEach(button=>button.addEventListener('click',()=>{const share=button.dataset.share;const text=encodeURIComponent('Join SBI PAY using my invitation link: '+inviteUrl);if(share==='telegram')window.open(`https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${text}`,'_blank');else if(share==='facebook')window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(inviteUrl)}`,'_blank');else if(share==='whatsapp')window.open(`https://wa.me/?text=${text}`,'_blank');else copyInvite()}));
+</script>
+</body>
+</html>

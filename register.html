@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>SBI PAY - Register</title><link rel="stylesheet" href="style.css"></head><body class="inner-page"><header class="page-header"><a class="back" href="index.html" aria-label="Back">←</a><h1>Register</h1></header><main class="inner-content"><form class="auth-form compact" id="register-form"><label class="field"><span class="field-icon user-icon"></span><input id="username" type="text" placeholder="User Name" aria-label="User Name" required></label><label class="field"><span class="field-icon lock-icon"></span><input type="password" placeholder="Password" aria-label="Password" required></label><label class="field phone-field"><span class="field-icon phone-icon"></span><strong>+91</strong><i></i><input type="tel" placeholder="Phone" aria-label="Phone" required></label><label class="field"><span class="field-icon link-icon"></span><input id="invite-code" type="text" placeholder="Invite Code" aria-label="Invite Code"></label><div id="register-error" role="alert" style="min-height:20px;color:#d74d4d;text-align:center"></div><button class="primary-button" type="submit">Sign Up</button></form></main><script src="auth.js"></script><script>
+const params=new URLSearchParams(location.search);
+const referral=params.get('ref')||params.get('invite')||params.get('inviteCode')||params.get('referral')||'';
+const apkDownloadUrl='SBI-PAY-debug.apk';
+const passwordInput=document.querySelector('input[type="password"]');
+const phoneInput=document.querySelector('.phone-field input');
+const success=document.createElement('div');
+success.id='register-success';
+success.setAttribute('role','status');
+success.style.cssText='min-height:20px;color:#129765;text-align:center';
+document.getElementById('register-form').append(success);
+const inviteInput=document.getElementById('invite-code');
+inviteInput.value=referral;
+const readJson=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch(error){return fallback}};
+document.getElementById('register-form').addEventListener('submit',async function(event){
+  event.preventDefault();
+  const username=document.getElementById('username').value.trim();
+  const phone=phoneInput.value.replace(/\D/g,'');
+  const error=document.getElementById('register-error');
+  const password=passwordInput.value;
+  const registeredPhones=readJson('sbiPayRegisteredPhones',{});
+  if(phone.length<10){error.textContent='Enter a valid mobile number.';return}
+  if(password.length<6){error.textContent='Password must be at least 6 characters.';return}
+  if(registeredPhones[phone]){error.textContent='This number is already registered.';return}
+  const savedBanks=readJson('sbiPayWalletBanks',[]);
+  const savedUpis=readJson('sbiPayWalletUpi',[]);
+  let useLocal=false;
+  try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),1500);
+    const response=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({username,phone,password,userId:'',inviteCode:'',ownerCode:referral,banks:savedBanks,upis:savedUpis,preflight:true})});
+    clearTimeout(timeout);
+    if(response.status===409){error.textContent=(await response.json()).error||'These registration details are already in use.';return}
+    if(!response.ok){if(response.status>=500)useLocal=true;else{error.textContent=(await response.json()).error||'Registration could not be completed.';return}}
+  }catch(networkError){useLocal=true}
+  let registered;
+  if(!useLocal)try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),5000);
+    const response=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({username,phone,password,ownerCode:referral,banks:savedBanks,upis:savedUpis})});
+    clearTimeout(timeout);
+    if(response.status===409){error.textContent=(await response.json()).error||'These registration details are already in use.';return}
+    if(!response.ok){error.textContent='Registration could not be completed. Please try again.';return}
+    registered=await response.json();
+  }catch(networkError){useLocal=true}
+  if(useLocal){
+    try{registered=await sbiPayAuth.localRegister({username,phone,password,ownerCode:referral,upiId:savedUpis[0]?.upiId||'',bankAccount:savedBanks[0]?.accountNumber||''})}
+    catch(localError){error.textContent=localError.message||'Registration could not be completed.';return}
+  }
+  const userId=String(registered.userId);
+  const inviteCode=registered.inviteCode;
+  const owners=readJson('sbiPayReferralOwners',{});
+  const parent=owners[referral]||null;
+  let profile={username,id:userId,inviteCode,ownerCode:referral,createdAt:new Date().toISOString()};
+  localStorage.setItem('sbiPayUsername',username);
+  profile={...profile,balance:399,depositBalance:399,packageName:'Free 399',packageAmount:399,signupBonusAmount:399};
+  localStorage.setItem('sbiPayProfile',JSON.stringify(profile));
+  localStorage.setItem('sbiPayUserId',userId);
+  registeredPhones[phone]=userId;
+  const adminUsers=readJson('sbiPayAdminUsers',[]);
+  const memberRecord={
+    userId,
+    username,
+    phone,
+    ownerCode: referral,
+    inviteCode,
+    balance: 399,
+    depositBalance: 399,
+    packageName: 'Free 399',
+    packageAmount: 399,
+    signupBonusAmount: 399,
+    walletLimit: 0,
+    isActive: true,
+    status: 'enabled',
+    upiId: savedUpis[0]?.upiId||'',
+    bankAccount: savedBanks[0]?.accountNumber||'',
+    bankName: savedBanks[0]?.bankName||'',
+    bankHolder: savedBanks[0]?.holderName||'',
+    bankIfsc: savedBanks[0]?.ifsc||'',
+    createdAt: new Date().toISOString()
+  };
+  const existingIndex=adminUsers.findIndex(item => String(item.userId)===String(userId) || String(item.phone)===String(phone));
+  if(existingIndex >= 0){ adminUsers[existingIndex]=memberRecord; }
+  else { adminUsers.push(memberRecord); }
+  localStorage.setItem('sbiPayAdminUsers',JSON.stringify(adminUsers));
+  localStorage.setItem('sbiPayInviteCode',inviteCode);
+  localStorage.setItem('sbiPayStartingBalance','0');
+  localStorage.removeItem('sbiPayTransactions');
+  localStorage.removeItem('sbiPaySellerSales');
+  localStorage.removeItem('sbiPayOrderLocks');
+  localStorage.removeItem('sbiPayBuyerId');
+  localStorage.removeItem('sbiPayWalletUpi');
+  localStorage.removeItem('sbiPayWalletBanks');
+  localStorage.setItem('sbiPayTransactions',JSON.stringify([{id:`signup-bonus-${userId}`,code:`BONUS${userId}`,type:'INR',currency:'INR',label:'Signup Bonus / Gift',direction:'receive',amount:399,status:'success',date:new Date().toISOString()}]));
+  localStorage.setItem('sbiPaySessionStartedAt',String(Date.now()));
+  owners[inviteCode]=profile;
+  localStorage.setItem('sbiPayReferralOwners',JSON.stringify(owners));
+  if(parent){
+    const members=readJson('sbiPayTeamMembers',[]);
+    members.push({username,id:userId,inviteCode,referral,ownerCode:referral,level:parent.ownerCode?'C':'B',activity:0,joinedAt:new Date().toISOString()});
+    localStorage.setItem('sbiPayTeamMembers',JSON.stringify(members));
+  }
+  success.textContent='Registration Successful';
+  document.querySelector('.primary-button').disabled=true;
+  setTimeout(()=>{
+    const downloadLink=document.createElement('a');
+    downloadLink.href=apkDownloadUrl;
+    downloadLink.download='SBI-PAY-debug.apk';
+    downloadLink.rel='noopener';
+    document.body.append(downloadLink);
+    downloadLink.click();
+    downloadLink.remove();
+    window.location.href='dashboard.html';
+  },900);
+});
+</script></body></html>

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Payment History</title>
+  <link rel="stylesheet" href="dashboard.css">
+  <script src="transactions.js"></script>
+  <style>
+    body{margin:0;background:#f3f5f8;color:#17212b;font-family:"Trebuchet MS",Arial,sans-serif}.app-shell{width:min(100%, 720px);margin:0 auto;padding:0 0 100px;min-height:100vh;background:#f4f5f7}.page-header{display:flex;align-items:center;gap:18px;padding:18px 22px 14px;background:#f4f5f7}.page-header a{color:#119766;font-size:52px;line-height:1;text-decoration:none}.page-header h1{margin:0;color:#199f70;font-size:54px;line-height:1.1;font-weight:700}.order-panel{padding:0 20px}.segmented{display:grid;grid-template-columns:1fr 1fr;gap:0;background:#dfe8e4;border-radius:26px;padding:7px;box-shadow:inset 0 0 0 1px rgba(17,76,58,.06)}.segmented button{border:0;background:transparent;color:#1c8d67;font-size:30px;font-weight:700;padding:20px 18px;border-radius:22px;cursor:pointer}.segmented button.active{background:#1fa66e;color:#fff;box-shadow:0 4px 12px rgba(24,132,92,.16)}.summary-card{margin-top:18px;background:#1ca767;border-radius:22px;padding:18px 22px 16px;color:#fff;box-shadow:0 8px 18px rgba(24,152,99,.18)}.summary-row{display:flex;justify-content:space-between;align-items:center;gap:12px}.summary-title{font-size:30px;font-weight:700}.summary-amount{font-size:38px;font-weight:700}.summary-amount small{font-size:18px;opacity:.8}.summary-meta{display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:18px;opacity:.95}.summary-meta span{display:flex;align-items:center;gap:8px}.currency-tabs{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;background:#e6eaf0;border-radius:18px;padding:6px}.currency-tabs button{border:0;background:transparent;color:#5d6771;font-size:26px;font-weight:700;padding:14px 20px;border-radius:14px;cursor:pointer}.currency-tabs button.active{background:#fff;color:#189a69;box-shadow:0 2px 8px rgba(20,48,52,.05)}.history-list{margin-top:16px;display:grid;gap:12px}.history-item{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;background:rgba(255,255,255,.32);border:1px solid rgba(17,82,60,.08);border-radius:18px;padding:18px 16px 16px;box-shadow:0 3px 10px rgba(25,53,47,.04)}.history-main{flex:1;min-width:0}.amount-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}.amount-value{font-size:50px;line-height:1;color:#0a9e65;font-weight:700;letter-spacing:-1px}.amount-value.negative{color:#0a9e65}.amount-value.positive{color:#0e7d52}.amount-value.negative::before{content:"- ";} .amount-value.positive::before{content:"+ ";}.status-pill{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:16px;font-size:23px;font-weight:700;min-width:150px}.status-pill.success{background:#1da86d;color:#fff}.status-pill.failed{background:#e95b58;color:#fff}.row-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;font-size:18px;color:#5c6369}.code-row{display:flex;align-items:center;gap:10px;min-width:0;flex:1}.code-label{font-size:20px;color:#262d34;font-weight:700;white-space:nowrap}.code-label strong{font-weight:700}.copy-button{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:0 0 28px;width:28px;height:28px;border:1px solid rgba(22,126,89,.25);border-radius:8px;background:rgba(255,255,255,.45);cursor:pointer}.copy-button::before{content:"";position:absolute;left:6px;top:5px;width:10px;height:10px;border:2px solid #1f8f68;border-radius:3px;background:transparent}.copy-button::after{content:"";position:absolute;left:11px;top:10px;width:10px;height:10px;border:2px solid #1f8f68;border-radius:3px;background:rgba(255,255,255,.45)}.copy-button.copied{background:#2ab97f;color:#fff}.copy-button.copied::before,.copy-button.copied::after{border-color:#fff}.time-box{font-size:18px;color:#5e6872;text-align:right;white-space:nowrap}.empty-state{padding:26px 0;text-align:center;color:#65707a;font-size:22px}.dark-currency{border:1px solid rgba(18,157,107,.1)}.status-pill .mark{font-size:18px;margin-right:6px}.status-pill.failed .mark{font-size:22px}.status-pill.success .mark{font-size:20px}</style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="page-header">
+      <a href="dashboard.html" aria-label="Back">←</a>
+      <h1>Payment History</h1>
+    </header>
+
+    <section class="order-panel">
+      <div class="segmented" aria-label="Order type selector">
+        <button class="active" data-direction="receive" type="button">Receive</button>
+        <button data-direction="purchase" type="button">Purchase</button>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-row">
+          <div class="summary-title">Balance:</div>
+          <div class="summary-amount" id="summary-balance">₹ 4.1</div>
+        </div>
+        <div class="summary-meta">
+          <span>Reward: <strong id="summary-reward">₹ 0</strong></span>
+          <span>Pending: <strong id="summary-pending">₹ 0</strong></span>
+        </div>
+      </div>
+
+      <div class="currency-tabs" aria-label="Currency selector">
+        <button class="active" data-currency="INR" type="button">INR</button>
+        <button data-currency="USDT" type="button">USDT</button>
+      </div>
+
+      <div class="history-list" id="history-list" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script>
+    const state={direction:'receive',currency:'INR'};
+    const historyList=document.getElementById('history-list');
+
+    const amountFormatter=(currency, value)=>{
+      if(currency==='USDT') return `${Number(value).toFixed(2)} USDT`;
+      return `₹ ${Number(value).toFixed(2)}`;
+    };
+
+    const formatTime=(iso)=>{
+      const date=new Date(iso);
+      const hours=String(date.getHours()).padStart(2,'0');
+      const minutes=String(date.getMinutes()).padStart(2,'0');
+      const seconds=String(date.getSeconds()).padStart(2,'0');
+      const day=String(date.getDate()).padStart(2,'0');
+      const month=String(date.getMonth()+1).padStart(2,'0');
+      const year=date.getFullYear();
+      return `${hours}:${minutes}:${seconds}\n${year}-${month}-${day}`.split('\n').join('<br>');
+    };
+
+    const summaryFor=records=>{
+      if(state.currency==='INR'&&state.direction==='purchase'){
+        const summary=sbiPayTransactions.accountSummary();
+        return {total:amountFormatter(state.currency,summary.balance),reward:amountFormatter(state.currency,summary.reward),pending:amountFormatter(state.currency,summary.pending)};
+      }
+      const total=records.reduce((sum, record)=>sum + Number(record.amount||0),0);
+      const pending=records.filter(record=>record.status==='processing').reduce((sum, record)=>sum + Number(record.amount||0),0);
+      return {total:amountFormatter(state.currency,total),reward:amountFormatter(state.currency,total*0.05),pending:amountFormatter(state.currency,pending)};
+    };
+
+    const copyCode=async button=>{
+      const code=button.dataset.code||'';
+      try{
+        await navigator.clipboard.writeText(code);
+        button.classList.add('copied');
+        const previous=button.title || 'Copy';
+        button.title='Copied';
+        setTimeout(()=>{button.classList.remove('copied');button.title=previous;},1200);
+      }catch(error){
+        window.prompt('Copy this code:', code);
+      }
+    };
+
+    const renderHistory=()=>{
+      const records=sbiPayTransactions.read()
+        .filter(record=>record.direction===state.direction && record.currency===state.currency)
+        .sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+      const summary=document.getElementById('summary-balance');
+      const reward=document.getElementById('summary-reward');
+      const pending=document.getElementById('summary-pending');
+      const info=summaryFor(records);
+      summary.textContent=info.total;
+      reward.textContent=info.reward;
+      pending.textContent=info.pending;
+
+      if(!records.length){
+        historyList.innerHTML='<div class="empty-state">No more data</div>';
+        return;
+      }
+
+      historyList.innerHTML=records.map(record=>{
+        const positive = state.direction === 'purchase';
+        const statusText=sbiPayTransactions.statusLabel(record.status);
+        const amountDisplay = amountFormatter(record.currency, Number(record.amount));
+        const displayValue = positive ? `+ ${amountDisplay}` : `- ${amountDisplay}`;
+        const statusClass = record.status === 'failed' || record.status === 'timeout' ? 'failed' : record.status === 'processing' ? 'pending' : 'success';
+        const mark = record.status === 'failed' || record.status === 'timeout' ? '×' : record.status === 'processing' ? '…' : '✓';
+        return `
+          <article class="history-item">
+            <div class="history-main">
+              <div class="amount-line">
+                <div class="amount-value ${positive ? 'positive' : 'negative'}">${record.currency === 'INR' ? (positive ? amountDisplay : amountDisplay) : amountDisplay}</div>
+                <span class="status-pill ${statusClass}"><span class="mark">${mark}</span>${statusText}</span>
+              </div>
+              <div class="row-meta">
+                <div class="code-row">
+                  <span class="code-label">Order Code: <strong>${record.code || record.id}</strong></span>
+                  <button class="copy-button" type="button" data-code="${record.code || record.id}" aria-label="Copy code"></button>
+                </div>
+                <div class="time-box">${formatTime(record.date)}</div>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      historyList.querySelectorAll('.copy-button').forEach(button=>{
+        button.addEventListener('click',()=>copyCode(button));
+      });
+    };
+
+    document.querySelectorAll('[data-direction]').forEach(button=>{
+      button.addEventListener('click',()=>{
+        state.direction=button.dataset.direction;
+        document.querySelectorAll('[data-direction]').forEach(item=>item.classList.toggle('active', item===button));
+        renderHistory();
+      });
+    });
+
+    document.querySelectorAll('[data-currency]').forEach(button=>{
+      button.addEventListener('click',()=>{
+        state.currency=button.dataset.currency;
+        document.querySelectorAll('[data-currency]').forEach(item=>item.classList.toggle('active', item===button));
+        renderHistory();
+      });
+    });
+
+    renderHistory();
+    sbiPayTransactions.subscribe(renderHistory);
+  </script>
+</body>
+</html>

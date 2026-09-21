@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Payment</title>
+  <link rel="stylesheet" href="dashboard.css">
+  <style>
+    :root{
+      --bg:#eef1f2;
+      --panel:#f5f7f8;
+      --green:#1aa86f;
+      --green-deep:#0d8d5f;
+      --green-soft:#dfece6;
+      --white:#ffffff;
+      --text:#1d2a35;
+      --muted:#697884;
+      --danger:#d84b4b;
+      --light:#e6eaee;
+      --shadow:0 10px 24px rgba(21,73,60,.08);
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%}
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:"Trebuchet MS",Arial,sans-serif;
+      display:flex;
+      justify-content:center;
+    }
+
+    .payment-shell{
+      width:min(100%, 430px);
+      min-height:100vh;
+      background:var(--bg);
+      padding:0 0 110px;
+      position:relative;
+    }
+
+    .status-strip{
+      position:sticky;top:0;z-index:2;
+      display:flex;justify-content:space-between;align-items:center;
+      padding:8px 16px 0;
+      background:transparent;
+      pointer-events:none;
+    }
+
+    .status-dots{display:flex;gap:12px;align-items:center}
+    .status-dots span{
+      display:block;width:8px;height:8px;border-radius:50%;background:#a8b4bb;
+      box-shadow:0 0 0 1px rgba(0,0,0,.08);
+    }
+    .status-dots span:first-child{background:#2e2f31}
+    .status-dots span:nth-child(2){background:#5a6670}
+    .status-dots span:nth-child(3){background:#d5d9dd}
+    .battery{width:44px;height:20px;border-radius:6px;background:rgba(28,53,55,.08);position:relative;overflow:hidden}
+    .battery::before{content:"";position:absolute;inset:3px 4px 3px 4px;border-radius:3px;background:#7a848f}
+    .battery::after{content:"";position:absolute;top:6px;right:-3px;width:3px;height:8px;border-radius:2px;background:#7a848f}
+
+    .payment-top{
+      display:flex;align-items:center;justify-content:center;
+      position:relative;
+      padding:18px 26px 12px;
+      margin-top:6px;
+    }
+    .payment-top h1{
+      margin:0;
+      font-size:56px;
+      font-weight:700;
+      letter-spacing:-1px;
+      color:#1aa86f;
+    }
+    .bot-avatar{
+      position:absolute;right:24px;top:14px;
+      width:64px;height:64px;border-radius:50%;
+      background:linear-gradient(135deg,#30d27d,#24b768);
+      box-shadow:0 8px 18px rgba(35,136,90,.22);
+      display:flex;align-items:center;justify-content:center;
+    }
+    .bot-avatar::before,
+    .bot-avatar::after{
+      content:"";position:absolute;background:#0d6f47;border-radius:50%;
+    }
+    .bot-avatar::before{width:24px;height:24px;top:16px;left:14px;box-shadow:18px 0 0 #0d6f47}
+    .bot-avatar::after{width:26px;height:16px;bottom:16px;left:19px;border-radius:20px 20px 14px 14px;background:#fff}
+
+    .panel-wrap{padding:0 18px}
+
+    .cashback-card{
+      background:linear-gradient(135deg,#1fab68,#1e9d66);
+      border-radius:24px;
+      padding:20px 22px 18px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      position:relative;
+      min-height:250px;
+    }
+
+    .cashback-header{
+      display:flex;align-items:flex-start;justify-content:space-between;
+      gap:12px;
+      position:relative;z-index:1;
+    }
+
+    .cashback-left{flex:1;min-width:0}
+    .cashback-title{font-size:30px;color:#eafef5;font-weight:600}
+    .cashback-rate{font-size:70px;line-height:1;color:#fff;font-weight:800;letter-spacing:-2px;margin-top:10px}
+    .cashback-rate .percent{font-size:42px;vertical-align:top;display:inline-block;margin-left:4px}
+
+    .stat-bars{
+      width:150px;height:90px;display:flex;align-items:flex-end;justify-content:flex-end;gap:8px;padding-top:10px;
+      position:relative;z-index:1;
+    }
+    .stat-bars span{
+      display:block;width:18px;background:rgba(255,255,255,.45);border-radius:6px 6px 0 0;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+    }
+    .stat-bars span:nth-child(1){height:32%}
+    .stat-bars span:nth-child(2){height:54%}
+    .stat-bars span:nth-child(3){height:68%}
+    .stat-bars span:nth-child(4){height:100%}
+    .stat-bars span:nth-child(5){height:76%}
+
+    .cashback-bottom{
+      margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative;z-index:1;
+    }
+    .mini-panel{background:rgba(255,255,255,.18);border-radius:16px;padding:14px 14px 12px;min-height:110px;display:flex;flex-direction:column;justify-content:space-between}
+    .mini-panel .label{font-size:18px;color:#dffaf0;font-weight:600}
+    .mini-panel .value{font-size:44px;line-height:1;color:#fff;font-weight:800;letter-spacing:-1px}
+    .mini-panel .value .rupee{font-size:34px;letter-spacing:-1px}
+
+    .mini-panel.right .label,
+    .mini-panel.right .value{color:#fff}
+
+    .cashback-card::before{
+      content:"";
+      position:absolute;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08);right:-44px;bottom:-60px;
+    }
+    .cashback-card::after{
+      content:"";
+      position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(37,108,214,.18);right:-8px;bottom:-12px;
+    }
+
+    .reward-strip{
+      margin:18px 0 16px;
+      background:#dfeef0;border:1px solid rgba(24,130,92,.06);
+      border-radius:16px;padding:12px 16px;
+      text-align:center;
+      font-size:28px;color:#148d69;font-weight:600;
+    }
+    .reward-strip .spark{font-size:28px;display:inline-block;transform:translateY(-2px);margin-right:8px}
+
+    .warning-text{
+      margin:0 auto 18px;
+      max-width:390px;
+      text-align:center;
+      font-size:26px;line-height:1.3;
+      color:#1a2a33;font-weight:700;
+    }
+    .warning-text .alert{font-size:30px;vertical-align:middle;color:#1aa86f;margin-right:8px;display:inline-block}
+
+    .packs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:8px 0 18px}
+    .pack-pill{
+      background:#e8ebee;border-radius:18px;padding:16px 10px;text-align:center;
+      color:#1c2f38;font-size:24px;font-weight:700;border:1px solid rgba(147,159,165,.08)
+    }
+    .pack-pill{border:0;cursor:pointer;font-family:inherit}
+    .pack-pill.active{
+      background:#1ea66e;color:#fff;box-shadow:0 8px 18px rgba(31,166,110,.20);
+    }
+
+    .order-search{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin:0 0 16px}
+    .order-search input{min-width:0;padding:13px 12px;border:1px solid #cbd7d9;border-radius:12px;background:#fff;color:var(--text);font:18px "Trebuchet MS",Arial,sans-serif}
+    .order-search button{padding:0 16px;border:0;border-radius:12px;background:#1ea66e;color:#fff;font:700 18px "Trebuchet MS",Arial,sans-serif;cursor:pointer}
+    .order-count{margin:-6px 0 12px;color:var(--muted);font-size:16px;text-align:right}
+
+    .promo-list{display:grid;gap:16px;padding:4px 4px 8px;max-height:52vh;min-height:180px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+    .promo-item{
+      background:rgba(255,255,255,.42);border:1px solid rgba(103,120,129,.12);border-radius:18px;
+      padding:16px 18px;
+      display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;
+      box-shadow:0 3px 8px rgba(31,54,58,.04);
+    }
+    .promo-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .promo-label{font-size:38px;font-weight:800;color:#1d2a35;letter-spacing:-1px}
+    .promo-code{font-size:24px;color:#2b6d5f;font-weight:700}
+    .promo-code strong{font-weight:800}
+    .promo-value{font-size:42px;font-weight:800;color:#0f8a5f;letter-spacing:-1px}
+    .promo-value span{font-size:30px}
+    .promo-income{font-size:28px;color:#d94d4d;font-weight:700;text-align:left}
+    .claim-btn{
+      margin-top:8px;grid-column:2;justify-self:end;
+      background:linear-gradient(180deg,#1ea96e,#1c9a65);color:#fff;border:0;border-radius:14px;
+      padding:12px 22px;font-size:22px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(31,166,110,.15);
+    }
+
+    .reference-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:50;width:min(100%,430px);height:88px;padding:8px 10px 7px;display:grid;grid-template-columns:repeat(5,1fr);gap:3px;background:#fff;border-top:1px solid #e5e5e5;box-shadow:0 -2px 12px rgba(0,0,0,.08)}
+    .reference-nav a{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;padding:2px 0;color:#a9a9a9;text-decoration:none;font-size:16px;font-weight:700;line-height:1.1}
+    .reference-nav .nav-icon{display:grid;place-items:center;width:50px;height:50px;font-size:36px;line-height:1;color:#b5b5b5}
+    .reference-nav a.active{color:#08a66a}.reference-nav a.active .nav-icon{color:#08a66a}.reference-nav a.wallet-active .nav-icon{border-radius:50%;background:#f8c928;color:#343434;box-shadow:0 1px 3px rgba(0,0,0,.12)}.reference-nav a:focus-visible{outline:2px solid #08a66a;outline-offset:-2px}
+    .bottom-nav{
+      position:sticky;bottom:0;left:0;right:0;
+      display:grid;grid-template-columns:repeat(5,1fr);gap:8px;
+      padding:18px 16px 10px;background:rgba(255,255,255,.4);backdrop-filter:blur(5px);
+      border-top:1px solid rgba(17,42,52,.06);
+      margin-top:24px;
+    }
+    .nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#5b7380;text-decoration:none;font-size:21px;font-weight:600}
+    .nav-item .icon{font-size:42px;line-height:1;display:block}
+    .nav-item.active{color:#1ca86e}
+    .nav-item.active .icon-wrap{background:linear-gradient(180deg,#f6fbf8,#eaf5ef);padding:10px 18px;border-radius:14px;box-shadow:0 3px 8px rgba(20,122,81,.08)}
+    .nav-item.active .icon{color:#1ea66e}
+
+    @media (max-width:380px){
+      .payment-top h1{font-size:48px}
+      .cashback-rate{font-size:58px}
+      .warning-text{font-size:22px}
+      .promo-label{font-size:30px}
+      .mini-panel .value{font-size:34px}
+    }
+    @media (max-width:600px){
+      .payment-shell{width:100%;max-width:430px;padding-bottom:78px}
+      .status-strip{padding:5px 12px 0}.payment-top{padding:12px 18px 8px;margin-top:0}.payment-top h1{font-size:32px;letter-spacing:0}.bot-avatar{right:16px;top:8px;width:44px;height:44px}
+      .panel-wrap{padding:0 14px}.cashback-card{min-height:205px;padding:17px 18px 15px;border-radius:18px}.cashback-title{font-size:20px}.cashback-rate{font-size:52px;margin-top:7px}.cashback-rate .percent{font-size:30px}.stat-bars{width:108px;height:64px;gap:5px}.stat-bars span{width:13px}.cashback-bottom{margin-top:9px;gap:8px}.mini-panel{min-height:78px;padding:9px 10px 8px;border-radius:12px}.mini-panel .label{font-size:13px}.mini-panel .value{font-size:27px}.mini-panel .value .rupee{font-size:22px}
+      .reward-strip{margin:12px 0 12px;padding:8px 10px;border-radius:12px;font-size:16px}.reward-strip .spark{font-size:17px;margin-right:4px}.warning-text{margin-bottom:12px;font-size:17px;line-height:1.25}.warning-text .alert{font-size:20px;margin-right:4px}.packs{gap:8px;margin:6px 0 12px}.pack-pill{padding:11px 6px;border-radius:14px;font-size:16px}.order-search{gap:6px;margin-bottom:11px}.order-search input{padding:10px 9px;font-size:15px}.order-search button{padding:0 12px;font-size:15px}.order-count{font-size:13px;margin:-4px 0 9px}.promo-list{gap:10px}.promo-item{padding:12px 13px;border-radius:15px;gap:5px 8px}.promo-label{font-size:27px}.promo-code{font-size:16px}.promo-value{font-size:29px}.promo-value span{font-size:21px}.promo-income{font-size:18px}.claim-btn{margin-top:4px;padding:8px 13px;border-radius:12px;font-size:16px}.reference-nav{height:70px;padding:5px 8px}.reference-nav a{font-size:12px}.reference-nav .nav-icon{width:36px;height:36px;font-size:26px}
+    }
+  </style>
+</head>
+<body>
+  <main class="payment-shell">
+    <div class="status-strip" aria-hidden="true">
+      <div class="status-dots"><span></span><span></span><span></span></div>
+      <div class="battery"></div>
+    </div>
+
+    <header class="payment-top">
+      <h1>Payment</h1>
+      <div class="bot-avatar" aria-hidden="true"></div>
+    </header>
+
+    <div class="panel-wrap">
+      <section class="cashback-card" aria-label="Cashback summary">
+        <div class="cashback-header">
+          <div class="cashback-left">
+            <div class="cashback-title">Cashback</div>
+            <div class="cashback-rate"><span id="cashback-rate">5.0</span><span class="percent">%</span></div>
+          </div>
+          <div class="stat-bars" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="cashback-bottom">
+          <div class="mini-panel">
+            <div class="label">Balance</div>
+            <div class="value"><span class="rupee">₹</span> <span id="balance-value">4.1</span></div>
+          </div>
+          <div class="mini-panel right">
+            <div class="label">Reward</div>
+            <div class="value"><span class="rupee">₹</span> <span id="reward-value">7129.8</span></div>
+            <div class="label" style="margin-top:8px;">Pending</div>
+            <div class="value" style="font-size:30px;"><span class="rupee">₹</span> <span id="pending-value">0</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="reward-strip"><span class="spark">✦</span>Special Reward is based on your activity</div>
+
+      <p class="warning-text"><span class="alert">⚠</span>Please use Freecharge or Mobikwik or Paytm wallet for payment!</p>
+
+      <div class="packs" aria-label="Order ranges">
+        <button class="pack-pill" type="button" data-range-min="10000" data-range-max="20000">10,000-20,000</button>
+        <button class="pack-pill active" type="button" data-range-min="5000" data-range-max="9999">5,000-9,999</button>
+        <button class="pack-pill" type="button" data-range-min="300" data-range-max="4000">300-4,000</button>
+      </div>
+
+      <form class="order-search" id="order-search" role="search">
+        <input id="minimum-value" type="number" min="0" step="1" placeholder="Minimum" aria-label="Minimum order amount">
+        <input id="maximum-value" type="number" min="0" step="1" placeholder="Maximum" aria-label="Maximum order amount">
+        <button type="submit">Search</button>
+      </form>
+      <div class="order-count" id="order-count" aria-live="polite"></div>
+
+      <section class="promo-list" id="promo-list" aria-live="polite"></section>
+    </div>
+
+    <nav class="reference-nav" aria-label="Main navigation">
+      <a href="dashboard.html"><span class="nav-icon">⌂</span><span>Home</span></a>
+      <a class="active" href="payment.html"><span class="nav-icon">▤</span><span>Payment</span></a>
+      <a class="wallet-active" href="wallet.html"><span class="nav-icon">▣</span><span>Wallet</span></a>
+      <a href="statistics.html"><span class="nav-icon">◌</span><span>Statistics</span></a>
+      <a href="my.html"><span class="nav-icon">◉</span><span>My</span></a>
+    </nav>
+  </main>
+
+  <script src="transactions.js"></script>
+  <script>
+    const measures = {
+      cashbackRate: 5,
+      balance: 0,
+      reward: 0,
+      pending: 0
+    };
+
+    const ranges = [
+      {min: 10000, step: 50},
+      {min: 5000, step: 25},
+      {min: 300, step: 18}
+    ];
+    const packs = Array.from({length: 600}, (_, index) => {
+      const rangeIndex = Math.floor(index / 200);
+      const orderIndex = index % 200;
+      const range = ranges[rangeIndex];
+      const amount = Math.min(range.min + orderIndex * range.step, rangeIndex === 2 ? 4000 : rangeIndex === 1 ? 9999 : 20000);
+      return {amount, income: Number((amount * 0.05).toFixed(2)), code: `SBI${String(index + 1).padStart(3, '0')}`};
+    });
+
+    const renderMetrics = () => {
+      document.getElementById('cashback-rate').textContent = Number(measures.cashbackRate).toFixed(1);
+      document.getElementById('balance-value').textContent = Number(measures.balance).toFixed(1);
+      document.getElementById('reward-value').textContent = Number(measures.reward).toFixed(1);
+      document.getElementById('pending-value').textContent = Number(measures.pending).toFixed(1);
+    };
+
+    let rotationOffset = 0;
+    const visibleOrders = orders => orders;
+
+    const renderPacks = (orders = packs) => {
+      const list = document.getElementById('promo-list');
+      document.getElementById('order-count').textContent = `${orders.length} orders in this range`;
+      list.innerHTML = visibleOrders(orders).map(item => `
+        <article class="promo-item">
+          <div class="promo-row">
+            <div class="promo-label">INR</div>
+            <div class="promo-code">Code <strong>${item.code}</strong></div>
+          </div>
+          <div class="promo-row" style="grid-column:1 / -1;justify-content:space-between;align-items:center;">
+            <div class="promo-value">₹ <span>${item.amount}</span></div>
+            <div class="promo-income">Income:+${item.income}</div>
+            <a class="claim-btn" href="claim.html?order=${encodeURIComponent(item.code)}&amount=${item.amount}&app=Paytm">Claim</a>
+          </div>
+        </article>
+      `).join('');
+    };
+
+    const renderMemberMetrics = () => {
+      const summary = window.sbiPayTransactions ? sbiPayTransactions.accountSummary() : {balance:0,reward:0,pending:0};
+      measures.balance = summary.balance;
+      measures.reward = summary.reward;
+      measures.pending = summary.pending;
+      renderMetrics();
+    };
+
+    let selectedRange = {min: 5000, max: 9999};
+    const renderFilteredPacks = () => {
+      const minimum = Number(document.getElementById('minimum-value').value) || selectedRange.min;
+      const maximum = Number(document.getElementById('maximum-value').value) || selectedRange.max;
+      renderPacks(packs.filter(item => item.amount >= minimum && item.amount <= maximum));
+    };
+
+    document.querySelectorAll('[data-range-min]').forEach(button => button.addEventListener('click', () => {
+      selectedRange = {min: Number(button.dataset.rangeMin), max: Number(button.dataset.rangeMax)};
+      document.querySelectorAll('[data-range-min]').forEach(item => item.classList.toggle('active', item === button));
+      document.getElementById('minimum-value').value = '';
+      document.getElementById('maximum-value').value = '';
+      renderFilteredPacks();
+    }));
+    document.getElementById('order-search').addEventListener('submit', event => {
+      event.preventDefault();
+      renderFilteredPacks();
+    });
+
+    renderMetrics();
+    renderMemberMetrics();
+    renderFilteredPacks();
+  </script>
+</body>
+</html>

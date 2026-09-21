@@ -1,0 +1,1230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Backend Admin Control Panel</title>
+  <style>
+    :root {
+      --bg: #060b10;
+      --panel: #0d141a;
+      --panel-strong: #111b22;
+      --panel-soft: #121d26;
+      --line: rgba(179, 201, 214, 0.22);
+      --text: #e5f7ff;
+      --muted: #90a9b5;
+      --green: #3bf2a1;
+      --green-strong: #27c983;
+      --cyan: #4cd9ff;
+      --blue: #59a8ff;
+      --amber: #ffbf45;
+      --red: #ff5d6c;
+      --shadow: rgba(0, 0, 0, 0.45);
+      --table-line: rgba(178, 205, 220, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top, rgba(78, 255, 194, 0.08), transparent 34%),
+        linear-gradient(180deg, #04080d 0%, #090d12 100%);
+      color: var(--text);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      padding: 18px;
+      color: var(--text);
+    }
+
+    .admin-app {
+      width: min(100%, 1500px);
+      margin: 0 auto;
+      border: 1px solid var(--line);
+      background: rgba(10, 16, 21, 0.96);
+      box-shadow: 0 0 30px var(--shadow);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 20px;
+      background: rgba(15, 20, 26, 0.96);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      display: inline-grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #1fe1b9, #2c8bff);
+      color: #02150f;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .nav-pills {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav-pills .nav-pill {
+      border: 1px solid transparent;
+      background: rgba(255,255,255,0.02);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+    }
+
+    .nav-pills .nav-pill.active {
+      border-color: rgba(57, 224, 170, 0.7);
+      background: rgba(57, 224, 170, 0.1);
+      color: var(--green);
+      box-shadow: inset 0 0 20px rgba(59, 246, 171, 0.12);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 10px rgba(59, 242, 161, 0.8);
+    }
+
+    .filter-panel {
+      padding: 18px 18px 0;
+      border-bottom: 1px solid var(--line);
+      background: rgba(13, 20, 26, 0.8);
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(200px, 1fr));
+      gap: 16px 20px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .field input,
+    .field select,
+    .field button {
+      height: 42px;
+      border-radius: 10px;
+      border: 1px solid rgba(172, 195, 209, 0.25);
+      background: rgba(14, 20, 26, 0.9);
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: rgba(76, 217, 255, 0.8);
+      box-shadow: inset 0 0 0 1px rgba(76, 217, 255, 0.2);
+    }
+
+    .filter-actions {
+      display: flex;
+      align-items: end;
+      gap: 12px;
+      padding-top: 18px;
+      padding-bottom: 18px;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 118px;
+      height: 42px;
+      border: 0;
+      border-radius: 10px;
+      padding: 0 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .action-btn:hover { transform: translateY(-1px); }
+
+    .action-btn.primary {
+      background: linear-gradient(135deg, var(--cyan), #3a84ff);
+      color: #07131b;
+      box-shadow: 0 0 20px rgba(76, 217, 255, 0.25);
+    }
+
+    .action-btn.danger {
+      background: linear-gradient(135deg, #ff6d74, #ff4563);
+      color: white;
+      box-shadow: 0 0 20px rgba(255, 93, 108, 0.25);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 14px;
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(12, 18, 23, 0.65);
+    }
+
+    .stat-card {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(12, 20, 28, 0.9), rgba(11, 16, 20, 0.7));
+      border-radius: 12px;
+      padding: 16px 18px;
+      min-height: 104px;
+    }
+
+    .stat-card .label {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .stat-card .value {
+      margin-top: 16px;
+      font-size: clamp(22px, 2vw, 30px);
+      font-weight: 800;
+      font-family: "Consolas", "Courier New", monospace;
+      color: var(--green);
+    }
+
+    .tab-row {
+      display: flex;
+      gap: 8px;
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(10, 15, 19, 0.82);
+    }
+
+    .tab-btn {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.02);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      min-width: 120px;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(59, 242, 161, 0.2), rgba(76, 217, 255, 0.18));
+      border-color: rgba(59, 242, 161, 0.6);
+      color: var(--green);
+      box-shadow: inset 0 0 18px rgba(59, 242, 161, 0.08);
+    }
+
+    .chip-row {
+      display: flex;
+      gap: 10px;
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(12, 18, 24, 0.9);
+    }
+
+    .chip-btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 18px;
+      color: #0b1116;
+      font-weight: 800;
+      cursor: pointer;
+      min-width: 124px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.15);
+    }
+
+    .chip-btn:hover { transform: translateY(-1px); }
+
+    .chip-btn.primary {
+      background: linear-gradient(135deg, #ffcb48, #f0a91f);
+      color: #16130a;
+    }
+
+    .chip-btn.success {
+      background: linear-gradient(135deg, #7ef0a8, #39d67b);
+      color: #0d2018;
+    }
+
+    .chip-btn.active {
+      box-shadow: 0 0 22px rgba(59, 242, 161, 0.18), inset 0 -2px 0 rgba(0,0,0,0.1);
+    }
+
+    .table-wrap {
+      padding: 0 18px 18px;
+    }
+
+    .bottom-panel {
+      padding: 0 18px 18px;
+    }
+
+    .data-notice {
+      display: none;
+      margin: 0 18px 18px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 191, 69, 0.45);
+      border-radius: 8px;
+      background: rgba(255, 191, 69, 0.08);
+      color: var(--amber);
+      font-size: 13px;
+    }
+
+    .bottom-list {
+      display: grid;
+      gap: 10px;
+      border: 1px solid var(--line);
+      background: rgba(12, 17, 22, 0.8);
+      padding: 12px;
+    }
+
+    .user-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1.2fr 1.8fr 1.1fr 2fr 1fr 1fr 1fr 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(10, 15, 20, 0.75);
+      transition: border-color 0.2s ease, background 0.2s ease;
+      cursor: pointer;
+    }
+
+    .user-row:hover {
+      border-color: rgba(76, 217, 255, 0.4);
+      background: rgba(15, 24, 30, 0.84);
+    }
+
+    .user-row .cell {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .user-row .muted-cell {
+      color: var(--muted);
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      width: 46px;
+      height: 24px;
+      background: rgba(255, 93, 108, 0.35);
+      border-radius: 999px;
+      border: 1px solid rgba(255, 93, 108, 0.35);
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .toggle-switch::before {
+      content: "";
+      position: absolute;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      transition: transform 0.2s ease;
+    }
+
+    .toggle-switch.on {
+      background: rgba(59, 242, 161, 0.35);
+      border-color: rgba(59, 242, 161, 0.45);
+    }
+
+    .toggle-switch.on::before {
+      transform: translateX(20px);
+    }
+
+    .row-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .action-link {
+      border: 1px solid rgba(76, 217, 255, 0.35);
+      background: rgba(76, 217, 255, 0.08);
+      color: var(--cyan);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .action-link.danger {
+      border-color: rgba(255, 93, 108, 0.35);
+      background: rgba(255, 93, 108, 0.08);
+      color: var(--red);
+    }
+
+    .empty-state.bottom-empty {
+      border: 1px solid var(--line);
+      background: rgba(10, 15, 20, 0.8);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto;
+      background: rgba(10, 16, 20, 0.7);
+      border: 1px solid var(--table-line);
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--table-line);
+      vertical-align: middle;
+      font-size: 14px;
+    }
+
+    th {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: rgba(18, 25, 30, 0.8);
+      white-space: nowrap;
+    }
+
+    tbody tr:hover {
+      background: rgba(78, 126, 146, 0.05);
+    }
+
+    .mono {
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border: 1px solid transparent;
+    }
+
+    .pill.enabled {
+      background: rgba(59, 242, 161, 0.12);
+      color: var(--green);
+      border-color: rgba(59, 242, 161, 0.3);
+    }
+
+    .pill.disabled {
+      background: rgba(255, 93, 108, 0.12);
+      color: var(--red);
+      border-color: rgba(255, 93, 108, 0.3);
+    }
+
+    .mini-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.02);
+      color: var(--text);
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .mini-btn.green { background: rgba(59, 242, 161, 0.12); border-color: rgba(59, 242, 161, 0.3); color: var(--green); }
+    .mini-btn.red { background: rgba(255, 93, 108, 0.12); border-color: rgba(255, 93, 108, 0.3); color: var(--red); }
+    .mini-btn.blue { background: rgba(76, 217, 255, 0.12); border-color: rgba(76, 217, 255, 0.3); color: var(--cyan); }
+    .mini-btn.amber { background: rgba(255, 191, 69, 0.12); border-color: rgba(255, 191, 69, 0.25); color: var(--amber); }
+
+    .compact-input {
+      width: 110px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid rgba(172, 195, 209, 0.22);
+      background: rgba(12, 18, 23, 0.8);
+      color: var(--text);
+      padding: 0 8px;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      padding: 28px 12px;
+      font-size: 15px;
+      letter-spacing: 0.04em;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 18px 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .page-button {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.02);
+      color: var(--text);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .page-button.active {
+      background: linear-gradient(135deg, rgba(76, 217, 255, 0.22), rgba(59, 242, 161, 0.18));
+      border-color: rgba(76, 217, 255, 0.5);
+      color: var(--cyan);
+    }
+
+    .muted { color: var(--muted); }
+    .text-cyan { color: var(--cyan); }
+    .text-red { color: var(--red); }
+    .text-green { color: var(--green); }
+
+    @media (max-width: 1100px) {
+      .filter-grid {
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .topbar {
+        flex-wrap: wrap;
+      }
+      .toolbar {
+        margin-left: 0;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(150px, 1fr));
+      }
+      .filter-grid {
+        grid-template-columns: 1fr;
+      }
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        min-width: 1000px;
+      }
+      body {
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">SP</span>
+        <span>SBI Pay</span>
+      </div>
+
+      <nav class="nav-pills" aria-label="Admin sections">
+        <button class="nav-pill active" type="button">Home</button>
+        <button class="nav-pill" type="button">Worker</button>
+        <button class="nav-pill" type="button">Users</button>
+        <button class="nav-pill" type="button">UPI</button>
+      </nav>
+
+      <div class="toolbar">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>System online</span>
+      </div>
+    </header>
+
+    <section class="filter-panel">
+      <div class="filter-grid">
+        <div class="field">
+          <label for="search-user-id">User ID</label>
+          <input id="search-user-id" type="text" placeholder="20030590" />
+        </div>
+        <div class="field">
+          <label for="search-phone">Phone</label>
+          <input id="search-phone" type="text" placeholder="Enter phone" />
+        </div>
+        <div class="field">
+          <label for="search-upi">UPI ID</label>
+          <input id="search-upi" type="text" placeholder="upi@paytm" />
+        </div>
+        <div class="field">
+          <label for="search-risk">Risk</label>
+          <select id="search-risk">
+            <option value="all">All</option>
+            <option value="risk">Risk</option>
+            <option value="unrisk">Unrisk</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="search-status">Account Status</label>
+          <select id="search-status">
+            <option value="all">All</option>
+            <option value="enabled">Enabled</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button class="action-btn primary" id="search-btn" type="button">Search</button>
+        <button class="action-btn danger" id="reset-btn" type="button">Reset</button>
+      </div>
+    </section>
+
+    <section class="stats-grid" id="summary-cards">
+      <div class="stat-card">
+        <div class="label">Total Users</div>
+        <div class="value" id="total-users">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Active Users</div>
+        <div class="value text-green" id="active-users">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">UPI Records</div>
+        <div class="value text-cyan" id="total-upi">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Payment Logs</div>
+        <div class="value text-amber" id="total-payments">0</div>
+      </div>
+    </section>
+
+    <div class="tab-row">
+      <button class="tab-btn active" data-tab="users" type="button">Users</button>
+      <button class="tab-btn" data-tab="upi" type="button">UPI Management</button>
+      <button class="tab-btn" data-tab="payments" type="button">Payments</button>
+    </div>
+
+    <div class="chip-row">
+      <button class="chip-btn primary active" type="button" data-work-mode="risk">UPI Batch Risk</button>
+      <button class="chip-btn success" type="button" data-work-mode="unrisk">UPI UnRisk</button>
+    </div>
+
+    <section class="table-wrap">
+      <div id="table-container"></div>
+    </section>
+
+    <div id="data-notice" class="data-notice" role="status"></div>
+
+    <section class="bottom-panel">
+      <div id="bottom-list" class="bottom-list"></div>
+    </section>
+
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <script>
+    const state = {
+      tab: 'users',
+      page: 1,
+      pageSize: 15,
+      data: { users: [], upi: [], payments: [] },
+      summary: { users: 0, active: 0, payments: 0, upi: 0 }
+    };
+
+    const tableContainer = document.getElementById('table-container');
+    const paginationEl = document.getElementById('pagination');
+
+    function formatMoney(value) {
+      const num = Number(value || 0);
+      return new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+    }
+
+    function formatDate(value) {
+      if (!value) return '—';
+      try {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '—';
+        return date.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+      } catch (error) {
+        return '—';
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[match]));
+    }
+
+    function readLocalUsers() {
+      try {
+        const users = JSON.parse(localStorage.getItem('sbiPayAdminUsers') || '[]');
+        return Array.isArray(users) ? users : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function readLocalTransactions() {
+      try {
+        const transactions = JSON.parse(localStorage.getItem('sbiPayTransactions') || '[]');
+        return Array.isArray(transactions) ? transactions : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function updateSummaryFromData() {
+      const users = state.data.users || [];
+      const upi = state.data.upi || [];
+      const payments = state.data.payments || [];
+      state.summary = {
+        users: users.length,
+        active: users.filter(user => user.isActive !== false).length,
+        payments: payments.length,
+        upi: upi.length
+      };
+      document.getElementById('total-users').textContent = state.summary.users;
+      document.getElementById('active-users').textContent = state.summary.active;
+      document.getElementById('total-upi').textContent = state.summary.upi;
+      document.getElementById('total-payments').textContent = state.summary.payments;
+    }
+
+    function showDataNotice(message) {
+      const notice = document.getElementById('data-notice');
+      notice.textContent = message;
+      notice.style.display = message ? 'block' : 'none';
+    }
+
+    async function fetchJson(url, options = {}) {
+      const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Request failed');
+      }
+      return response.json();
+    }
+
+    function applyFilters(items) {
+      const userId = document.getElementById('search-user-id').value.trim().toLowerCase();
+      const phone = document.getElementById('search-phone').value.trim().toLowerCase();
+      const upi = document.getElementById('search-upi').value.trim().toLowerCase();
+      const risk = document.getElementById('search-risk').value;
+      const status = document.getElementById('search-status').value;
+
+      return items.filter(item => {
+        const haystack = [
+          item.userId,
+          item.phone,
+          item.upiId,
+          item.ownerCode,
+          item.username,
+          item.ownerName,
+          item.app,
+          item.status,
+          item.riskStatus,
+          item.risk ? 'risk' : 'unrisk'
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        if (userId && !String(item.userId || item.ownerUserId || '').toLowerCase().includes(userId)) return false;
+        if (phone && !String(item.phone || '').toLowerCase().includes(phone)) return false;
+        if (upi && !String(item.upiId || '').toLowerCase().includes(upi)) return false;
+        if (risk !== 'all' && String(item.riskStatus || (item.risk ? 'risk' : 'unrisk')).toLowerCase() !== risk) return false;
+        if (status !== 'all' && String(item.status || (item.isActive === false ? 'disabled' : 'enabled')).toLowerCase() !== status) return false;
+        if (!haystack.includes(userId) && userId) return false;
+        return true;
+      });
+    }
+
+    async function loadSummary() {
+      try {
+        const summary = await fetchJson('/api/admin/summary');
+        state.summary = {
+          users: summary.users || 0,
+          active: summary.active || 0,
+          payments: summary.payments || 0,
+          upi: summary.upi || 0
+        };
+        document.getElementById('total-users').textContent = state.summary.users;
+        document.getElementById('active-users').textContent = state.summary.active;
+        document.getElementById('total-payments').textContent = state.summary.payments;
+        document.getElementById('total-upi').textContent = state.summary.upi || state.data.upi.length || 0;
+      } catch (error) {
+        console.error('loadSummary error', error);
+      }
+    }
+
+    async function loadData() {
+      const localUsers = readLocalUsers();
+      const localTransactions = readLocalTransactions();
+      let apiUnavailable = false;
+      try {
+        const [usersRes, upiRes, paymentsRes] = await Promise.all([
+          fetchJson('/api/admin/users').catch(() => { apiUnavailable = true; return {items: []}; }),
+          fetchJson('/api/admin/upi').catch(() => { apiUnavailable = true; return {items: []}; }),
+          fetchJson('/api/admin/payments').catch(() => { apiUnavailable = true; return {items: []}; })
+        ]);
+
+        state.data.users = Array.isArray(usersRes.items) && usersRes.items.length ? usersRes.items : localUsers;
+        state.data.upi = Array.isArray(upiRes.items) && upiRes.items.length
+          ? upiRes.items
+          : state.data.users.filter(user => user.upiId).map(user => ({
+            id: user.upiId,
+            upiId: user.upiId,
+            ownerUserId: user.userId,
+            ownerName: user.username,
+            app: user.upiId.includes('@') ? user.upiId.split('@')[1] : 'UPI',
+            enabled: true,
+            risk: false,
+            min: 0,
+            max: 0
+          }));
+        state.data.payments = Array.isArray(paymentsRes.items) && paymentsRes.items.length ? paymentsRes.items : localTransactions;
+      } catch (error) {
+        console.error('loadData error', error);
+        state.data.users = localUsers;
+        state.data.upi = localUsers.filter(user => user.upiId).map(user => ({id: user.upiId, upiId: user.upiId, ownerUserId: user.userId, ownerName: user.username, app: 'UPI', enabled: true, risk: false, min: 0, max: 0}));
+        state.data.payments = localTransactions;
+      }
+      updateSummaryFromData();
+      showDataNotice(apiUnavailable ? 'Live admin data is unavailable. Showing registered data saved in this browser.' : '');
+      renderTable();
+    }
+
+    function renderPagination(totalItems) {
+      const pages = Math.max(1, Math.ceil(totalItems / state.pageSize));
+      if (totalItems <= state.pageSize) {
+        paginationEl.innerHTML = '';
+        return;
+      }
+
+      const buttons = [];
+      const start = Math.max(1, state.page - 1);
+      const end = Math.min(pages, state.page + 1);
+      for (let page = start; page <= end; page += 1) {
+        buttons.push(`<button class="page-button ${state.page === page ? 'active' : ''}" data-page="${page}" type="button">${page}</button>`);
+      }
+      paginationEl.innerHTML = buttons.join('');
+    }
+
+    function renderUsers() {
+      const filtered = applyFilters(state.data.users).slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+      renderPagination(applyFilters(state.data.users).length);
+
+      if (!filtered.length) {
+        tableContainer.innerHTML = '<div class="empty-state">No users match the selected filters.</div>';
+        return;
+      }
+
+      const rows = filtered.map(user => `
+        <tr>
+          <td class="mono">${escapeHtml(user.userId || '')}</td>
+          <td>${escapeHtml(user.username || '—')}</td>
+          <td class="mono">${escapeHtml(user.phone || '')}</td>
+          <td class="mono">${escapeHtml(user.ownerCode || '—')}</td>
+          <td class="mono">${escapeHtml(user.upiId || 'Not provided')}</td>
+          <td class="payment-details">${escapeHtml([user.bankName, user.bankHolder, user.bankAccount && `A/C ${user.bankAccount}`, user.bankIfsc && `IFSC ${user.bankIfsc}`].filter(Boolean).join(' · ') || 'Not provided')}</td>
+          <td class="mono">₹ ${formatMoney(user.balance || 0)}</td>
+          <td class="mono">₹ ${formatMoney(user.walletLimit || 0)}</td>
+          <td><span class="pill ${user.isActive === false ? 'disabled' : 'enabled'}">${user.isActive === false ? 'Disabled' : 'Enabled'}</span></td>
+          <td>
+            <button class="mini-btn ${user.isActive === false ? 'green' : 'red'}" data-action="toggle-user" data-user-id="${escapeHtml(user.userId || '')}">${user.isActive === false ? 'Enable' : 'Disable'}</button>
+          </td>
+          <td>
+            <input class="compact-input" type="number" min="0" data-user-limit-input="${escapeHtml(user.userId || '')}" value="${Number(user.walletLimit || 0)}" />
+            <button class="mini-btn blue" data-action="set-user-limit" data-user-id="${escapeHtml(user.userId || '')}" style="margin-left:8px;">Set</button>
+          </td>
+          <td>
+            <button class="mini-btn amber" data-action="reset-user-password" data-user-id="${escapeHtml(user.userId || '')}">Reset</button>
+          </td>
+        </tr>
+      `).join('');
+
+      tableContainer.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Upline</th>
+              <th>UPI ID</th>
+              <th>Bank Details</th>
+              <th>Balance</th>
+              <th>Wallet Limit</th>
+              <th>Status</th>
+              <th>Control</th>
+              <th>Update Limit</th>
+              <th>Password</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function renderUpi() {
+      const filtered = applyFilters(state.data.upi).slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+      renderPagination(applyFilters(state.data.upi).length);
+
+      if (!filtered.length) {
+        tableContainer.innerHTML = '<div class="empty-state">No UPI records match the selected filters.</div>';
+        return;
+      }
+
+      const rows = filtered.map(item => `
+        <tr>
+          <td class="mono">${escapeHtml(item.ownerUserId || '')}</td>
+          <td class="mono">${escapeHtml(item.ownerName || '')}</td>
+          <td class="mono">${escapeHtml(item.upiId || '')}</td>
+          <td class="mono">${escapeHtml(item.app || 'UPI')}</td>
+          <td><span class="pill ${item.enabled === false ? 'disabled' : 'enabled'}">${item.enabled === false ? 'Disabled' : 'Enabled'}</span></td>
+          <td><span class="pill ${item.risk ? 'disabled' : 'enabled'}">${item.risk ? 'Risk' : 'Unrisk'}</span></td>
+          <td>
+            <input class="compact-input" type="number" data-upi-min="${escapeHtml(item.id || item.upiId || '')}" value="${Number(item.min || 0)}" />
+          </td>
+          <td>
+            <input class="compact-input" type="number" data-upi-max="${escapeHtml(item.id || item.upiId || '')}" value="${Number(item.max || 0)}" />
+          </td>
+          <td>
+            <button class="mini-btn ${item.enabled === false ? 'green' : 'red'}" data-action="toggle-upi" data-upi-id="${escapeHtml(item.id || item.upiId || '')}">${item.enabled === false ? 'Enable' : 'Disable'}</button>
+          </td>
+          <td>
+            <button class="mini-btn ${item.risk ? 'red' : 'green'}" data-action="toggle-risk" data-upi-id="${escapeHtml(item.id || item.upiId || '')}">${item.risk ? 'Mark Unrisk' : 'Mark Risk'}</button>
+          </td>
+          <td>
+            <button class="mini-btn blue" data-action="save-upi-limits" data-upi-id="${escapeHtml(item.id || item.upiId || '')}">Save</button>
+          </td>
+        </tr>
+      `).join('');
+
+      tableContainer.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Owner</th>
+              <th>UPI ID</th>
+              <th>App</th>
+              <th>Status</th>
+              <th>Risk</th>
+              <th>Min</th>
+              <th>Max</th>
+              <th>Toggle</th>
+              <th>Risk Flag</th>
+              <th>Save</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function renderPayments() {
+      const filtered = applyFilters(state.data.payments).slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+      renderPagination(applyFilters(state.data.payments).length);
+
+      if (!filtered.length) {
+        tableContainer.innerHTML = '<div class="empty-state">No payment records match the selected filters.</div>';
+        return;
+      }
+
+      const rows = filtered.map(payment => `
+        <tr>
+          <td class="mono">${escapeHtml(payment.userId || '')}</td>
+          <td class="mono">₹ ${formatMoney(payment.amount || 0)}</td>
+          <td class="mono">${escapeHtml(payment.channel || '—')}</td>
+          <td><span class="pill ${payment.type === 'deposit' ? 'enabled' : 'disabled'}">${escapeHtml(payment.type || '—')}</span></td>
+          <td><span class="pill ${payment.status === 'success' ? 'enabled' : payment.status === 'pending' ? 'amber' : 'disabled'}">${escapeHtml(payment.status || '—')}</span></td>
+          <td class="mono">${escapeHtml(payment.orderId || payment.id || '—')}</td>
+          <td class="mono">${formatDate(payment.createdAt)}</td>
+        </tr>
+      `).join('');
+
+      tableContainer.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Amount</th>
+              <th>Channel</th>
+              <th>Payment Type</th>
+              <th>Status</th>
+              <th>Order ID</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function renderBottomList() {
+      const localUsers = readLocalUsers();
+      const list = state.data.users && state.data.users.length ? state.data.users : localUsers;
+      if (!list.length) {
+        document.getElementById('bottom-list').innerHTML = '<div class="empty-state bottom-empty">No registered IDs found.</div>';
+        return;
+      }
+
+      const rows = list.map(user => {
+        const upi = user.upiId || 'No UPI configured';
+        const bank = [user.bankName, user.bankHolder, user.bankAccount && `A/C ${user.bankAccount}`, user.bankIfsc && `IFSC ${user.bankIfsc}`].filter(Boolean).join(' · ') || 'No bank configured';
+        const active = user.isActive !== false;
+        return `
+          <div class="user-row" data-user-row="${escapeHtml(user.userId || '')}" tabindex="0">
+            <div class="cell"><strong>${escapeHtml(user.userId || '')}</strong></div>
+            <div class="cell muted-cell">${escapeHtml(user.phone || '')}</div>
+            <div class="cell ${upi === 'No UPI configured' ? 'muted-cell' : ''}">${escapeHtml(upi)}</div>
+            <div class="cell ${bank === 'No bank configured' ? 'muted-cell' : ''}">${escapeHtml(bank)}</div>
+            <div class="cell"><span class="pill ${active ? 'enabled' : 'disabled'}">${active ? 'Active' : 'Blocked'}</span></div>
+            <div class="cell">${escapeHtml(user.ownerCode || '—')}</div>
+            <div class="cell"><span class="toggle-switch ${active ? 'on' : ''}" data-toggle-user="${escapeHtml(user.userId || '')}" data-enabled="${active ? 'true' : 'false'}" title="Toggle account status"></span></div>
+            <div class="row-actions">
+              <button class="action-link" type="button" data-open-user="${escapeHtml(user.userId || '')}">Open</button>
+              <button class="action-link danger" type="button" data-password-user="${escapeHtml(user.userId || '')}">Change Password</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('bottom-list').innerHTML = rows;
+    }
+
+    function renderTable() {
+      const s = state.tab;
+      if (s === 'users') renderUsers();
+      else if (s === 'upi') renderUpi();
+      else renderPayments();
+      renderBottomList();
+    }
+
+    async function handleTableAction(action, element) {
+      const userId = element.dataset.userId;
+      const upiId = element.dataset.upiId;
+
+      if (action === 'toggle-user') {
+        const user = state.data.users.find(item => item.userId === userId);
+        if (!user) return;
+        await fetchJson(`/api/admin/users/${encodeURIComponent(userId)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ enabled: !user.isActive })
+        });
+        await loadData();
+        await loadSummary();
+      }
+
+      if (action === 'set-user-limit') {
+        const limitValue = document.querySelector(`[data-user-limit-input="${CSS.escape(userId)}"]`)?.value;
+        const limit = Number(limitValue);
+        if (!Number.isFinite(limit)) return;
+        await fetchJson(`/api/admin/users/${encodeURIComponent(userId)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ limit })
+        });
+        await loadData();
+      }
+
+      if (action === 'reset-user-password') {
+        const newPassword = prompt('Enter new password for this user:', 'admin123');
+        if (!newPassword || newPassword.trim().length < 6) {
+          alert('Password must be at least 6 characters.');
+          return;
+        }
+        await fetchJson(`/api/admin/users/${encodeURIComponent(userId)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ password: newPassword.trim() })
+        });
+        alert('Password updated successfully.');
+      }
+
+      if (action === 'toggle-upi') {
+        const record = state.data.upi.find(item => (item.id || item.upiId) === upiId);
+        if (!record) return;
+        await fetchJson(`/api/admin/upi/${encodeURIComponent(upiId)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ enabled: !record.enabled })
+        });
+        await loadData();
+      }
+
+      if (action === 'toggle-risk') {
+        const record = state.data.upi.find(item => (item.id || item.upiId) === upiId);
+        if (!record) return;
+        await fetchJson(`/api/admin/upi/${encodeURIComponent(upiId)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ risk: !record.risk })
+        });
+        await loadData();
+      }
+
+      if (action === 'save-upi-limits') {
+        const min = Number(document.querySelector(`[data-upi-min="${CSS.escape(upiId)}"]`)?.value ?? 0);
+        const max = Number(document.querySelector(`[data-upi-max="${CSS.escape(upiId)}"]`)?.value ?? 0);
+        await fetchJson(`/api/admin/upi/${encodeURIComponent(upiId)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ min, max })
+        });
+        await loadData();
+      }
+    }
+
+    document.addEventListener('click', async event => {
+      const actionElement = event.target.closest('[data-action]');
+      const pageButton = event.target.closest('[data-page]');
+      const tabButton = event.target.closest('[data-tab]');
+      const workModeButton = event.target.closest('[data-work-mode]');
+      const toggleUser = event.target.closest('[data-toggle-user]');
+      const openUser = event.target.closest('[data-open-user]');
+      const passwordUser = event.target.closest('[data-password-user]');
+
+      if (actionElement) {
+        await handleTableAction(actionElement.dataset.action, actionElement);
+        return;
+      }
+
+      if (pageButton) {
+        state.page = Number(pageButton.dataset.page || 1);
+        renderTable();
+        return;
+      }
+
+      if (tabButton) {
+        state.tab = tabButton.dataset.tab;
+        state.page = 1;
+        document.querySelectorAll('.tab-btn').forEach(button => button.classList.toggle('active', button.dataset.tab === state.tab));
+        renderTable();
+        return;
+      }
+
+      if (workModeButton) {
+        document.querySelectorAll('[data-work-mode]').forEach(button => button.classList.toggle('active', button === workModeButton));
+        state.tab = workModeButton.dataset.workMode === 'risk' ? 'upi' : 'users';
+        document.querySelectorAll('.tab-btn').forEach(button => button.classList.toggle('active', button.dataset.tab === state.tab));
+        renderTable();
+        return;
+      }
+
+      if (toggleUser) {
+        const userId = toggleUser.dataset.toggleUser;
+        const user = state.data.users.find(item => item.userId === userId);
+        if (!user) return;
+        const enabled = user.isActive !== false;
+        await fetchJson(`/api/admin/users/${encodeURIComponent(userId)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ enabled: !enabled })
+        });
+        await loadData();
+        await loadSummary();
+        return;
+      }
+
+      if (openUser) {
+        const userId = openUser.dataset.openUser;
+        alert(`Opening user profile for ${userId}`);
+        return;
+      }
+
+      if (passwordUser) {
+        const userId = passwordUser.dataset.passwordUser;
+        const newPassword = prompt(`Enter new password for ${userId}:`, 'admin123');
+        if (!newPassword || newPassword.trim().length < 6) {
+          alert('Password must be at least 6 characters.');
+          return;
+        }
+        await fetchJson(`/api/admin/users/${encodeURIComponent(userId)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ password: newPassword.trim() })
+        });
+        alert('Password updated successfully.');
+      }
+    });
+
+    document.getElementById('search-btn').addEventListener('click', () => {
+      state.page = 1;
+      renderTable();
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      ['search-user-id', 'search-phone', 'search-upi', 'search-risk', 'search-status'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el.tagName === 'SELECT') el.value = 'all';
+        else el.value = '';
+      });
+      state.page = 1;
+      renderTable();
+    });
+
+    async function init() {
+      await loadSummary();
+      await loadData();
+      setInterval(async () => {
+        await loadSummary();
+        await loadData();
+      }, 6000);
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Claim Order</title>
+<link rel="stylesheet" href="dashboard.css">
+<script src="transactions.js"></script>
+<style>
+  :root{--green:#0b9862;--ink:#1b252b;--muted:#778188;--line:#dcebe6;--page:#f4f8f7}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font-family:"Trebuchet MS",Arial,sans-serif}
+  .claim-shell{width:min(100%,576px);min-height:100vh;margin:auto;padding:0 18px 32px}
+  .claim-header{height:112px;margin:0 -18px;padding:0 18px;display:flex;align-items:center;gap:16px;background:#fff;border-bottom:1px solid var(--line)}
+  .claim-header a{color:var(--green);font:42px/1 Arial,sans-serif;text-decoration:none}
+  .claim-header h1{margin:0;color:var(--green);font-size:29px}
+  .claim-card{margin-top:20px;padding:20px 18px 22px;background:#fff;border-radius:20px;box-shadow:0 5px 18px rgba(25,70,57,.08)}
+  .order-summary{display:flex;justify-content:space-between;gap:12px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+  .order-summary span{display:block;color:var(--muted);font-size:15px}.order-summary strong{display:block;margin-top:5px;font-size:22px}
+  .status{color:#bd7a18!important}.section-title{margin:22px 0 12px;font-size:20px}
+  .upi-list{display:grid;gap:10px}
+  .upi-option{display:flex;align-items:center;gap:12px;padding:13px;border:2px solid var(--line);border-radius:14px;cursor:pointer}
+  .upi-option:has(input:checked){border-color:var(--green);background:#effaf5}
+  .upi-option input{accent-color:var(--green);width:20px;height:20px;margin-left:auto;order:3}
+  .upi-option img{width:42px;height:42px;object-fit:contain;border-radius:9px;background:#f2f5f4}
+  .upi-option strong{display:block;font-size:17px}.upi-option small{display:block;margin-top:3px;color:var(--muted);font-size:13px}
+  .notice{margin:16px 0 0;color:var(--muted);font-size:13px;line-height:1.4}
+  .confirm{width:100%;height:52px;margin-top:20px;border:0;border-radius:27px;background:var(--green);color:#fff;font:700 18px inherit;cursor:pointer}.confirm:disabled{background:#a9cfc0;cursor:not-allowed}
+  .message{min-height:20px;margin:12px 0 0;color:#c34f5a;text-align:center;font-size:14px}
+  @media(max-width:390px){.claim-shell{padding-left:14px;padding-right:14px}.claim-header{margin-left:-14px;margin-right:-14px;padding-left:14px;padding-right:14px}.claim-card{padding:17px 14px}.claim-header h1{font-size:25px}}
+</style>
+</head>
+<body>
+<main class="claim-shell">
+  <header class="claim-header"><a href="payment.html" aria-label="Back">←</a><h1>Claim Order</h1></header>
+  <section class="claim-card">
+    <div class="order-summary"><div><span>Order</span><strong id="order-code">-</strong></div><div><span>Amount</span><strong id="order-amount">₹ 0</strong></div><div><span>Status</span><strong class="status">Pending</strong></div></div>
+    <h2 class="section-title">Select UPI payment option</h2>
+    <div class="upi-list" id="upi-list"></div>
+    <p class="notice">Choose the payment option you will use, then confirm to continue to the payment details page.</p>
+    <button class="confirm" id="confirm-claim" type="button">Confirm</button>
+    <p class="message" id="claim-message" role="status"></p>
+  </section>
+</main>
+<script>
+  const params=new URLSearchParams(location.search);
+  const orderId=params.get('order')||`ORD${Date.now()}`;
+  const amount=Math.max(0,Number(params.get('amount')||0));
+  const defaultApp=params.get('app')||'Paytm';
+  const readUpis=()=>{try{return JSON.parse(localStorage.getItem('sbiPayWalletUpi')||'[]').filter(item=>item.enabled!==false)}catch(error){return []}};
+  const upis=readUpis().length?readUpis():[{app:'Mobikwik',upiId:'8837022561'},{app:'Paytm',upiId:'8837022561'}];
+  const iconFor=app=>app.toLowerCase().includes('paytm')?'https://cdn.iconscout.com/icon/free/png-256/free-paytm-3521643-2945092.png':app.toLowerCase().includes('mobi')?'https://s3.ap-south-1.amazonaws.com/mobikwik-images/images/mobikwik_logo.png':'https://cdn-icons-png.flaticon.com/512/2721/2721064.png';
+  document.getElementById('order-code').textContent=orderId;
+  document.getElementById('order-amount').textContent=`₹ ${amount.toFixed(2)}`;
+  const list=document.getElementById('upi-list');
+  list.innerHTML=upis.map((item,index)=>`<label class="upi-option"><img src="${iconFor(item.app||'UPI')}" alt="${item.app||'UPI'}"><span><strong>${item.app||'UPI'}</strong><small>${item.upiId||''}</small></span><input type="radio" name="upi" value="${index}" ${((item.app||'').toLowerCase()===defaultApp.toLowerCase()||(!defaultApp&&index===0))?'checked':''}></label>`).join('');
+  if(!list.querySelector('input:checked'))list.querySelector('input').checked=true;
+  sbiPayTransactions.upsertPurchase(orderId,amount,{app:upis[Number(list.querySelector('input:checked')?.value||0)]?.app||defaultApp});
+  document.getElementById('confirm-claim').addEventListener('click',()=>{const selected=list.querySelector('input:checked');if(!selected){document.getElementById('claim-message').textContent='Select a UPI payment option.';return}const selectedUpi=upis[Number(selected.value)];sbiPayTransactions.upsertPurchase(orderId,amount,{app:selectedUpi.app||'UPI',upiId:selectedUpi.upiId||''});location.href=`deposit_buy.html?order=${encodeURIComponent(orderId)}&amount=${encodeURIComponent(amount)}&app=${encodeURIComponent(selectedUpi.app||'UPI')}&upi=${encodeURIComponent(selectedUpi.upiId||'')}&type=INR`});
+</script>
+</body>
+</html>

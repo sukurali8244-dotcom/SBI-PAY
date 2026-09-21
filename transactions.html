@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>All Transactions</title>
+<link rel="stylesheet" href="dashboard.css">
+<script src="transactions.js"></script>
+<style>.transaction-link{display:contents}</style>
+</head>
+<body>
+<main class="app-shell">
+<header class="page-title"><a href="dashboard.html">←</a><h1>All Transactions</h1></header>
+<section class="transactions full-history"><header><h2>Transaction History</h2></header></section>
+</main>
+<script>
+const history=document.querySelector('.full-history');
+const renderHistory=records=>{history.querySelectorAll('article').forEach(article=>article.remove());records.forEach(record=>{const article=document.createElement('article');article.innerHTML=`<a class="transaction-link" href="deposit.html"><span class="transaction-icon">${record.type==='USDT'?'¥↓':'$↓'}</span><div><strong>${record.label||'Deposit'}</strong><small>${sbiPayTransactions.formatDate(record.date)}</small></div><div class="amount">${sbiPayTransactions.amountLabel(record)}<span class="status-badge status-${record.status}">${sbiPayTransactions.statusLabel(record.status)}</span></div></a>`;history.append(article)})};
+renderHistory(sbiPayTransactions.read());
+sbiPayTransactions.subscribe(renderHistory);
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>USDT Order Details</title>
+<link rel="stylesheet" href="dashboard.css">
+<script src="transactions.js"></script>
+</head>
+<body class="order-details-page">
+<main class="app-shell order-details-shell">
+<header class="order-details-header"><a href="usdt.html" aria-label="Back">←</a><h1>USDT Order</h1></header>
+<section class="order-details-card">
+<div class="purchase-total"><span>Total Payment</span><strong id="total-payment">₹ 0.00</strong></div>
+<div class="detail-row"><span>Purchase Amount:</span><strong id="purchase-amount">0.00 USDT</strong></div>
+<div class="detail-row"><span>Wallet Address:</span><div class="detail-value"><strong id="wallet-address">Loading...</strong><button class="copy-detail" type="button" data-copy-target="wallet-address" aria-label="Copy wallet address">▣</button></div></div>
+<div class="detail-row"><span>Network / Chain Type:</span><div class="detail-value"><strong id="network-name">Pending</strong><button class="copy-detail" type="button" data-copy-target="network-name" aria-label="Copy network">▣</button></div></div>
+<div class="detail-row"><span>Order Status:</span><div class="detail-value"><strong id="order-status">Pending</strong><button class="copy-detail" type="button" data-copy-target="order-status" aria-label="Copy status">▣</button></div></div>
+<div class="detail-row"><span>Date &amp; Time:</span><strong id="order-date"></strong></div>
+<div class="detail-row"><span>Order Number:</span><div class="detail-value"><strong id="order-number"></strong><button class="copy-detail" type="button" data-copy-target="order-number" aria-label="Copy order number">▣</button></div></div>
+<h2>Bank / Payment Details</h2>
+<div class="bank-details"><div class="detail-row"><span>Account Number:</span><div class="detail-value"><strong id="account-number">41029268462</strong><button class="copy-detail" type="button" data-copy-target="account-number" aria-label="Copy account number">▣</button></div></div><div class="detail-row"><span>IFSC Code:</span><div class="detail-value"><strong id="ifsc-code">SBI0005807</strong><button class="copy-detail" type="button" data-copy-target="ifsc-code" aria-label="Copy IFSC code">▣</button></div></div><div class="detail-row"><span>Account Holder:</span><div class="detail-value"><strong id="account-holder">NUR SALAM ALI</strong><button class="copy-detail" type="button" data-copy-target="account-holder" aria-label="Copy account holder">▣</button></div></div><div class="detail-row"><span>Bank Name:</span><div class="detail-value"><strong id="bank-name">STATE BANK OF INDIA</strong><button class="copy-detail" type="button" data-copy-target="bank-name" aria-label="Copy bank name">▣</button></div></div></div>
+<div class="proof-section"><label for="payment-proof">Proof of Payment</label><input id="payment-proof" type="file" accept="image/*"><small>Upload a screenshot of your completed payment.</small><label for="utr-number">UTR number</label><input id="utr-number" inputmode="numeric" maxlength="12" pattern="[0-9]{12}" placeholder="Enter 12-digit UTR" required></div>
+<button id="submit-order" class="submit-order-button" type="button">Submit</button><p id="submit-message" class="submit-message" role="status"></p>
+</section>
+</main>
+<script>
+const params=new URLSearchParams(location.search);const amount=Math.max(0,Number(params.get('amount')||0));const chain=params.get('chain')||'Not selected';const rate=90;const wallet=chain.toUpperCase().includes('BSC')?'0x742d35Cc6634C0532925a3b844Bc454e4438f44e':'TDKCUoXaUXLsr9J9eP76b3Ehe73AVRQY9c';const now=new Date();const orderNumber=`U${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}${Math.floor(Math.random()*900000+100000)}`;document.getElementById('total-payment').textContent=`₹ ${(amount*rate).toFixed(2)}`;document.getElementById('purchase-amount').textContent=`${amount.toFixed(2)} USDT`;document.getElementById('wallet-address').textContent=wallet;document.getElementById('network-name').textContent=chain;document.getElementById('order-date').textContent=sbiPayTransactions.formatDate(now);document.getElementById('order-number').textContent=orderNumber;const proof=document.getElementById('payment-proof');const submit=document.getElementById('submit-order');const message=document.getElementById('submit-message');document.querySelectorAll('.copy-detail').forEach(button=>button.addEventListener('click',async()=>{const text=document.getElementById(button.dataset.copyTarget).textContent;try{await navigator.clipboard.writeText(text);button.textContent='✓';setTimeout(()=>button.textContent='▣',1000)}catch(error){button.textContent='✓'}}));proof.addEventListener('change',()=>{if(proof.files.length&&!proof.files[0].type.startsWith('image/'))message.textContent='Please upload a valid screenshot image.';else message.textContent=''});submit.addEventListener('click',()=>{const selectedFile=proof.files[0];const utr=document.getElementById('utr-number').value.trim();if(!selectedFile||!selectedFile.type.startsWith('image/')){message.textContent='Please upload a valid screenshot image.';return}if(!/^\d{12}$/.test(utr)){message.textContent='Enter a valid 12-digit UTR number.';return}const order=sbiPayTransactions.upsertPurchase(orderNumber,amount*rate,{app:params.get('app')||'UPI',chain});if(!order||!sbiPayTransactions.completePurchase(orderNumber,utr)){message.textContent='This UTR is invalid or has already been used.';return}document.getElementById('order-status').textContent='Success';submit.disabled=true;window.location.href='dashboard.html'});
+</script>
+</body>
+</html>
