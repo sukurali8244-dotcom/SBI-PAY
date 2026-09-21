@@ -21,6 +21,7 @@
 <small class="version">v1.0.2</small>
 </main>
 <script>
+const apiBase = window.location.origin || 'https://sbi-pay.onrender.com';
 const loginForm=document.getElementById('login-form');
 loginForm.addEventListener('submit',async event=>{
 	event.preventDefault();
@@ -28,11 +29,12 @@ loginForm.addEventListener('submit',async event=>{
 	const password=loginForm.querySelector('input[type="password"]').value;
 	const error=document.getElementById('login-error');
 	try{
-		const response=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,password})});
+		const response=await fetch(`${apiBase}/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,password})});
 		const data=await response.json();
 		if(response.status>=500)throw new Error('Login service is temporarily unavailable.');
 		if(!response.ok){error.textContent=data.error||'Unable to sign in.';return}
 		const profile=data.user;
+		sbiPayAuth.clearSession();
 		localStorage.setItem('sbiPayUsername',profile.username);
 		localStorage.setItem('sbiPayProfile',JSON.stringify(profile));
 		localStorage.setItem('sbiPayUserId',profile.id);

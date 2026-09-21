@@ -48,7 +48,8 @@
   const amount=Math.max(0,Number(params.get('amount')||0));
   const defaultApp=params.get('app')||'Paytm';
   const sellerName=params.get('seller')||'Seller';
-  const readUpis=()=>{try{return JSON.parse(localStorage.getItem('sbiPayWalletUpi')||'[]').filter(item=>item.enabled!==false)}catch(error){return []}};
+  const getUserId=()=>{try{const profile=JSON.parse(localStorage.getItem('sbiPayProfile')||'null');return String(profile?.id || localStorage.getItem('sbiPayUserId') || '').trim()}catch(error){return String(localStorage.getItem('sbiPayUserId') || '').trim()}};
+  const readUpis=()=>{const userId=getUserId();const key=userId?`sbiPayUser:${userId}:walletUpi`:'sbiPayGuest:walletUpi';try{return JSON.parse(localStorage.getItem(key)||'[]').filter(item=>item.enabled!==false)}catch(error){return []}};
   const upis=readUpis().length?readUpis():[{app:'Mobikwik',upiId:'8837022561'},{app:'Paytm',upiId:'8837022561'}];
   const iconFor=app=>app.toLowerCase().includes('paytm')?'https://cdn.iconscout.com/icon/free/png-256/free-paytm-3521643-2945092.png':app.toLowerCase().includes('mobi')?'https://s3.ap-south-1.amazonaws.com/mobikwik-images/images/mobikwik_logo.png':'https://cdn-icons-png.flaticon.com/512/2721/2721064.png';
   document.getElementById('order-code').textContent=orderId;

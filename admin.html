@@ -753,8 +753,10 @@
       notice.style.display = message ? 'block' : 'none';
     }
 
+    const apiBase = window.location.origin || 'https://sbi-pay.onrender.com';
     async function fetchJson(url, options = {}) {
-      const response = await fetch(url, {
+      const normalizedUrl = `${apiBase}${url.startsWith('/') ? url : '/' + url}`;
+      const response = await fetch(normalizedUrl, {
         headers: { 'Content-Type': 'application/json' },
         ...options
       });

@@ -1,14 +1,30 @@
 (function(){
+  const getUserId=()=>{
+    try{
+      const profile=JSON.parse(localStorage.getItem('sbiPayProfile')||'null');
+      return String(profile?.id || localStorage.getItem('sbiPayUserId') || '').trim();
+    }catch(error){
+      return String(localStorage.getItem('sbiPayUserId') || '').trim();
+    }
+  };
+  const scopeKey=key=>{
+    const userId=getUserId();
+    return userId ? `sbiPayUser:${userId}:${key}` : `sbiPayGuest:${key}`;
+  };
   const sessionStartedAt=Number(localStorage.getItem('sbiPaySessionStartedAt'));
   const sessionProfile=localStorage.getItem('sbiPayProfile');
   if(sessionProfile&&!Number.isFinite(sessionStartedAt))localStorage.setItem('sbiPaySessionStartedAt',String(Date.now()));
   if(sessionProfile&&Number.isFinite(sessionStartedAt)&&Date.now()-sessionStartedAt>=24*60*60*1000){
     ['sbiPayUsername','sbiPayProfile','sbiPayUserId','sbiPayInviteCode','sbiPaySessionStartedAt'].forEach(key=>localStorage.removeItem(key));
+    for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+      const key = localStorage.key(index);
+      if (key && key.startsWith('sbiPayUser:')) localStorage.removeItem(key);
+    }
     if(!/login\.html$/i.test(location.pathname))window.location.href='login.html';
     return;
   }
-  document.addEventListener('click',event=>{if(event.target.closest('#confirm-logout'))['sbiPayUsername','sbiPayProfile','sbiPayUserId','sbiPayInviteCode','sbiPaySessionStartedAt'].forEach(key=>localStorage.removeItem(key))});
-  const storageKey='sbiPayTransactions';
+  document.addEventListener('click',event=>{if(event.target.closest('#confirm-logout')){['sbiPayUsername','sbiPayProfile','sbiPayUserId','sbiPayInviteCode','sbiPaySessionStartedAt'].forEach(key=>localStorage.removeItem(key));for (let index = localStorage.length - 1; index >= 0; index -= 1){const key=localStorage.key(index);if(key&&key.startsWith('sbiPayUser:'))localStorage.removeItem(key);}}});
+  const storageKey=scopeKey('transactions');
   const seededTransactions=[
     {id:'receive-inr-185324',code:'X6GsNb',type:'INR',currency:'INR',label:'Receive INR',direction:'receive',amount:100,status:'success',date:'2026-09-15T18:35:21'},
     {id:'receive-inr-135819',code:'4kcXwN',type:'INR',currency:'INR',label:'Receive INR',direction:'receive',amount:200,status:'success',date:'2026-09-15T14:16:09'},
@@ -41,8 +57,8 @@
         try{
           const profile=JSON.parse(localStorage.getItem('sbiPayProfile')||'null');
           const bonus=Number(profile?.signupBonusAmount||profile?.packageAmount||0);
-          if(bonus>0&&!clean.some(transaction=>transaction.id===`signup-bonus-${profile.id}`)){
-            clean.unshift({id:`signup-bonus-${profile.id}`,code:`BONUS${profile.id}`,type:'INR',currency:'INR',label:'Signup Bonus / Gift',direction:'receive',amount:bonus,status:'success',date:profile.createdAt||new Date().toISOString()});
+          if(bonus>0&&!clean.some(transaction=>transaction.id===`signup-bonus-${profile.id}` && transaction.label === 'Registration Bonus gifted by Game')){
+            clean.unshift({id:`signup-bonus-${profile.id}`,code:`BONUS${profile.id}`,type:'INR',currency:'INR',label:'Registration Bonus gifted by Game',direction:'receive',amount:399,status:'success',date:profile.createdAt||new Date().toISOString()});
             localStorage.setItem(storageKey,JSON.stringify(clean));
           }
         }catch(error){}
@@ -51,7 +67,7 @@
     }catch(error){}
     return [];
   };
-  const write=transactions=>{localStorage.setItem(storageKey,JSON.stringify(transactions));try{const profile=JSON.parse(localStorage.getItem('sbiPayProfile')||'null');if(profile?.id){const deposits=transactions.filter(record=>record.direction==='receive'&&record.status==='success').reduce((sum,record)=>sum+Number(record.amount||0),0);const activity=transactions.filter(record=>record.status==='success').reduce((sum,record)=>sum+Number(record.amount||0),0);fetch('/api/user/stats',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:profile.id,depositTotal:deposits,activity})}).catch(()=>{})}}catch(error){}};
+  const write=transactions=>{localStorage.setItem(storageKey,JSON.stringify(transactions));try{const profile=JSON.parse(localStorage.getItem('sbiPayProfile')||'null');const apiBase = window.location.origin || 'https://sbi-pay.onrender.com';if(profile?.id){const deposits=transactions.filter(record=>record.direction==='receive'&&record.status==='success').reduce((sum,record)=>sum+Number(record.amount||0),0);const activity=transactions.filter(record=>record.status==='success').reduce((sum,record)=>sum+Number(record.amount||0),0);fetch(`${apiBase}/api/user/stats`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:profile.id,depositTotal:deposits,activity})}).catch(()=>{})}}catch(error){}};
   const add=transaction=>{
     const record={id:`${transaction.type||'order'}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,date:new Date().toISOString(),status:'processing',...normalizeTransaction(transaction)};
     const transactions=read();
@@ -65,7 +81,7 @@
     if(status==='failed')return 'Failed';
     if(status==='timeout')return 'Timeout';
     if(status==='success')return 'Success';
-    if(status==='processing')return 'Processing';
+    if(status==='processing'||status==='pending')return 'Processing';
     return status ? status[0].toUpperCase()+status.slice(1) : 'Processing';
   };
   const amountLabel=record=>record.currency==='USDT'?`${Number(record.amount).toFixed(2)} USDT`:`₹ ${Number(record.amount).toFixed(2)}`;
@@ -73,13 +89,13 @@
     const records=read().filter(record=>record.currency==='INR');
     const received=records.filter(record=>record.direction==='receive'&&record.status==='success').reduce((sum,record)=>sum+record.amount,0);
     const spent=records.filter(record=>record.direction==='purchase'&&record.status==='success').reduce((sum,record)=>sum+record.amount,0);
-    const startingBalance=Number(localStorage.getItem('sbiPayStartingBalance')||0);
+    const startingBalance=Number(localStorage.getItem(scopeKey('startingBalance'))||0);
     const balance=Math.max(0,startingBalance+received-spent);
-    return {balance,reward:balance*0.05,pending:records.filter(record=>record.status==='processing').reduce((sum,record)=>sum+record.amount,0)};
+    return {balance,reward:balance*0.05,pending:records.filter(record=>record.status==='processing'||record.status==='pending').reduce((sum,record)=>sum+record.amount,0)};
   };
-  const buyerId=()=>{const key='sbiPayBuyerId';const existing=localStorage.getItem(key);if(existing)return existing;const id=`buyer-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;localStorage.setItem(key,id);return id};
-  const readLocks=()=>{try{return JSON.parse(localStorage.getItem('sbiPayOrderLocks')||'{}')}catch(error){return {}}};
-  const writeLocks=locks=>localStorage.setItem('sbiPayOrderLocks',JSON.stringify(locks));
+  const buyerId=()=>{const key=scopeKey('buyerId');const existing=localStorage.getItem(key);if(existing)return existing;const id=`buyer-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;localStorage.setItem(key,id);return id};
+  const readLocks=()=>{try{return JSON.parse(localStorage.getItem(scopeKey('orderLocks'))||'{}')}catch(error){return {}}};
+  const writeLocks=locks=>localStorage.setItem(scopeKey('orderLocks'),JSON.stringify(locks));
   const marketOrdersKey='sbiPayMarketOrders';
   const readMarketOrders=()=>{try{const market=JSON.parse(localStorage.getItem(marketOrdersKey)||'[]');return Array.isArray(market)?market:[]}catch(error){return []}};
   const writeMarketOrders=orders=>localStorage.setItem(marketOrdersKey,JSON.stringify(orders));
@@ -97,11 +113,11 @@
   const lockOrder=(orderId,amount,seller)=>{const locks=readLocks();const now=Date.now();const existing=locks[orderId];if(existing&&existing.expiresAt>now&&existing.owner!==buyerId())return {locked:false,lock:existing};const lock={owner:buyerId(),orderId,amount,seller,expiresAt:now+30*60*1000};locks[orderId]=lock;writeLocks(locks);return {locked:true,lock};};
   const releaseOrder=orderId=>{const locks=readLocks();delete locks[orderId];writeLocks(locks)};
   const upsertPurchase=(orderId,amount,seller)=>{const records=read();let record=records.find(item=>item.orderId===orderId&&item.direction==='purchase');if(!record){record={id:`purchase-${orderId}`,orderId,code:orderId,type:'INR',currency:'INR',label:'Purchase INR',direction:'purchase',amount:Number(amount),status:'processing',seller:seller||{},date:new Date().toISOString()};records.unshift(record);write(records);return record}record.amount=Number(amount)||record.amount;record.seller={...(record.seller||{}),...(seller||{})};record.updatedAt=new Date().toISOString();write(records);return record;};
-  const completePurchase=(orderId,utr)=>{if(!/^\d{12}$/.test(String(utr||'')))return null;const records=read();const record=records.find(item=>item.orderId===orderId&&item.direction==='purchase');if(!record||records.some(item=>item.utr===utr))return null;record.status='success';record.utr=utr;record.completedAt=new Date().toISOString();const commission=Number((record.amount*.05).toFixed(2));const completedAt=new Date().toISOString();records.unshift({id:`purchase-credit-${orderId}`,code:orderId,type:'INR',currency:'INR',label:'Purchase Credit',direction:'receive',amount:record.amount,status:'success',date:completedAt,sourceOrderId:orderId,utr});records.unshift({id:`commission-${orderId}`,code:orderId,type:'INR',currency:'INR',label:'Purchase Commission (5%)',direction:'receive',amount:commission,status:'success',date:completedAt,sourceOrderId:orderId,utr});write(records);const sales=JSON.parse(localStorage.getItem('sbiPaySellerSales')||'[]');sales.unshift({...record,status:'sold',sellerStatus:'Sold',sellerBalanceDeduction:record.amount});localStorage.setItem('sbiPaySellerSales',JSON.stringify(sales));const sellerRecords=JSON.parse(localStorage.getItem('sbiPaySellerTransactions')||'[]');sellerRecords.unshift({id:`seller-sale-${orderId}`,orderId,label:'Sale INR',direction:'sale',amount:record.amount,status:'success',utr,date:completedAt});localStorage.setItem('sbiPaySellerTransactions',JSON.stringify(sellerRecords));const sellerBalance=Math.max(0,Number(localStorage.getItem('sbiPaySellerBalance')||0)-record.amount);localStorage.setItem('sbiPaySellerBalance',String(sellerBalance));const profile=JSON.parse(localStorage.getItem('sbiPayProfile')||'null');if(profile?.ownerCode){const referralCredits=JSON.parse(localStorage.getItem('sbiPayReferralCredits')||'[]');referralCredits.unshift({id:`referral-${orderId}`,ownerCode:profile.ownerCode,amount:commission,sourceOrderId:orderId,utr,status:'success',date:completedAt});localStorage.setItem('sbiPayReferralCredits',JSON.stringify(referralCredits))}releaseOrder(orderId);return record;};
+  const completePurchase=(orderId,utr)=>{if(!/^\d{12}$/.test(String(utr||'')))return null;const records=read();const record=records.find(item=>item.orderId===orderId&&item.direction==='purchase');if(!record||records.some(item=>item.utr===utr))return null;record.status='success';record.utr=utr;record.completedAt=new Date().toISOString();const commission=Number((record.amount*.05).toFixed(2));const completedAt=new Date().toISOString();records.unshift({id:`purchase-credit-${orderId}`,code:orderId,type:'INR',currency:'INR',label:'Purchase Credit',direction:'receive',amount:record.amount,status:'success',date:completedAt,sourceOrderId:orderId,utr});records.unshift({id:`commission-${orderId}`,code:orderId,type:'INR',currency:'INR',label:'Purchase Commission (5%)',direction:'receive',amount:commission,status:'success',date:completedAt,sourceOrderId:orderId,utr});write(records);const salesKey=scopeKey('sellerSales');const sales=JSON.parse(localStorage.getItem(salesKey)||'[]');sales.unshift({...record,status:'sold',sellerStatus:'Sold',sellerBalanceDeduction:record.amount});localStorage.setItem(salesKey,JSON.stringify(sales));const sellerRecordsKey=scopeKey('sellerTransactions');const sellerRecords=JSON.parse(localStorage.getItem(sellerRecordsKey)||'[]');sellerRecords.unshift({id:`seller-sale-${orderId}`,orderId,label:'Sale INR',direction:'sale',amount:record.amount,status:'success',utr,date:completedAt});localStorage.setItem(sellerRecordsKey,JSON.stringify(sellerRecords));const sellerBalanceKey=scopeKey('sellerBalance');const sellerBalance=Math.max(0,Number(localStorage.getItem(sellerBalanceKey)||0)-record.amount);localStorage.setItem(sellerBalanceKey,String(sellerBalance));const profile=JSON.parse(localStorage.getItem('sbiPayProfile')||'null');if(profile?.ownerCode){const referralCreditsKey=scopeKey('referralCredits');const referralCredits=JSON.parse(localStorage.getItem(referralCreditsKey)||'[]');referralCredits.unshift({id:`referral-${orderId}`,ownerCode:profile.ownerCode,amount:commission,sourceOrderId:orderId,utr,status:'success',date:completedAt});localStorage.setItem('sbiPayReferralCredits',JSON.stringify(referralCredits))}releaseOrder(orderId);return record;};
   const timeoutPurchase=orderId=>{const records=read();const record=records.find(item=>item.orderId===orderId&&item.direction==='purchase');if(!record)return null;record.status='timeout';write(records);releaseOrder(orderId);return record};
   const cancelPurchase=orderId=>{const records=read();const record=records.find(item=>item.orderId===orderId&&item.direction==='purchase');if(!record||record.status==='success')return null;record.status='cancelled';record.cancelledAt=new Date().toISOString();write(records);releaseOrder(orderId);return record};
-  const verifyUtr=(utr,amount,orderId)=>{const normalized=String(utr||'').replace(/\D/g,'');if(!/^\d{12}$/.test(normalized))return {verified:false,reason:'Please enter a valid 12-digit UTR number.'};if(!Number.isFinite(Number(amount))||Number(amount)<=0)return {verified:false,reason:'Amount is invalid.'};const used=JSON.parse(localStorage.getItem('sbiPayVerifiedUtrs')||'[]');if(Array.isArray(used)&&used.includes(normalized))return {verified:false,reason:'This UTR has already been used for another order.'};const summary=JSON.parse(localStorage.getItem('sbiPayTradeSummary')||'{}');if(summary[orderId]===normalized)return {verified:false,reason:'This order already verified this UTR.'};return {verified:true,utr:normalized};};
-  const submitOrder=({orderId,amount,buyerName,buyerId,seller,utr,app,proofName})=>{const normalized=String(utr||'').replace(/\D/g,'');const used=JSON.parse(localStorage.getItem('sbiPayVerifiedUtrs')||'[]');const list=Array.isArray(used)?used:[];list.unshift(normalized);localStorage.setItem('sbiPayVerifiedUtrs',JSON.stringify([...new Set(list)].slice(0,500)));const summary=JSON.parse(localStorage.getItem('sbiPayTradeSummary')||'{}');summary[orderId]=normalized;localStorage.setItem('sbiPayTradeSummary',JSON.stringify(summary));const queue=JSON.parse(localStorage.getItem('sbiPaySellerPayments')||'[]');queue.unshift({id:`trade-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,orderId,amount:Number(amount||0),buyerName,buyerName,buyerId,seller: seller || {},utr:normalized,app: app || 'UPI',proofName: proofName || '',status:'processing',createdAt:new Date().toISOString()});localStorage.setItem('sbiPaySellerPayments',JSON.stringify(queue));return queue[0];};
+  const verifyUtr=(utr,amount,orderId)=>{const normalized=String(utr||'').replace(/\D/g,'');if(!/^\d{12}$/.test(normalized))return {verified:false,reason:'Please enter a valid 12-digit UTR number.'};if(!Number.isFinite(Number(amount))||Number(amount)<=0)return {verified:false,reason:'Amount is invalid.'};const used=JSON.parse(localStorage.getItem(scopeKey('verifiedUtrs'))||'[]');if(Array.isArray(used)&&used.includes(normalized))return {verified:false,reason:'This UTR has already been used for another order.'};const summary=JSON.parse(localStorage.getItem(scopeKey('tradeSummary'))||'{}');if(summary[orderId]===normalized)return {verified:false,reason:'This order already verified this UTR.'};return {verified:true,utr:normalized};};
+  const submitOrder=({orderId,amount,buyerName,buyerId,seller,utr,app,proofName})=>{const normalized=String(utr||'').replace(/\D/g,'');const used=JSON.parse(localStorage.getItem(scopeKey('verifiedUtrs'))||'[]');const list=Array.isArray(used)?used:[];list.unshift(normalized);localStorage.setItem(scopeKey('verifiedUtrs'),JSON.stringify([...new Set(list)].slice(0,500)));const summary=JSON.parse(localStorage.getItem(scopeKey('tradeSummary'))||'{}');summary[orderId]=normalized;localStorage.setItem(scopeKey('tradeSummary'),JSON.stringify(summary));const queue=JSON.parse(localStorage.getItem(scopeKey('sellerPayments'))||'[]');queue.unshift({id:`trade-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,orderId,amount:Number(amount||0),buyerName,buyerName,buyerId,seller: seller || {},utr:normalized,app: app || 'UPI',proofName: proofName || '',status:'processing',createdAt:new Date().toISOString()});localStorage.setItem(scopeKey('sellerPayments'),JSON.stringify(queue));return queue[0];};
   const subscribe=callback=>{
     const refresh=()=>callback(read());
     window.addEventListener('storage',refresh);

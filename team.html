@@ -21,6 +21,7 @@
 <section class="team-section"><div class="team-section-inner performance"><h2>Performance</h2><div class="chart-tabs"><button data-period="day" type="button">Day</button><button data-period="week" type="button">Week</button><button class="active" data-period="month" type="button">Month</button></div><div class="performance-value" id="performance-value">+0.00 <small>this month</small></div><div class="chart"><div class="chart-labels"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div></div></div></section>
 </main>
 <script>
+const apiBase = window.location.origin || 'https://sbi-pay.onrender.com';
 const profile=JSON.parse(localStorage.getItem('sbiPayProfile')||'null');
 const userId=profile?.id||localStorage.getItem('sbiPayUserId')||'';
 if(!userId){window.location.href='login.html'}
@@ -53,13 +54,13 @@ teamSectionCount.className='tier-count';
 teamSectionCount.innerHTML='Total team members: <strong>0</strong>';
 teamSectionInner?.prepend(teamSectionCount);
 let serverTeamLoaded=false;
-const syncUserStats=async()=>{try{const records=window.sbiPayTransactions?.read()||[];const deposits=records.filter(record=>record.direction==='receive'&&record.status==='success').reduce((sum,record)=>sum+Number(record.amount||0),0);const activity=records.filter(record=>record.status==='success').reduce((sum,record)=>sum+Number(record.amount||0),0);await fetch('/api/user/stats',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId,depositTotal:deposits,activity})})}catch(error){}};
-const loadTeamFromServer=async()=>{try{const response=await fetch(`/api/team?ownerCode=${encodeURIComponent(code)}`);if(!response.ok)return;const data=await response.json();serverTeamLoaded=true;const serverDirect=data.directMembers||[];const serverIndirect=data.indirectMembers||[];document.getElementById('level-b-members').innerHTML=serverDirect.map(memberMarkup).join('');document.getElementById('level-c-members').innerHTML=serverIndirect.map(memberMarkup).join('');document.getElementById('level-b-count').textContent=serverDirect.length;document.getElementById('level-c-count').textContent=serverIndirect.length;document.getElementById('member-count').textContent=`+${serverDirect.length+serverIndirect.length}`;teamSectionCount.querySelector('strong').textContent=serverDirect.length+serverIndirect.length;document.getElementById('team-deposit').textContent=`+${Number(data.totalDeposit||0).toFixed(2)}`}catch(error){}};
+const syncUserStats=async()=>{try{const records=window.sbiPayTransactions?.read()||[];const deposits=records.filter(record=>record.direction==='receive'&&record.status==='success').reduce((sum,record)=>sum+Number(record.amount||0),0);const activity=records.filter(record=>record.status==='success').reduce((sum,record)=>sum+Number(record.amount||0),0);await fetch(`${apiBase}/api/user/stats`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId,depositTotal:deposits,activity})})}catch(error){}};
+const loadTeamFromServer=async()=>{try{const response=await fetch(`${apiBase}/api/team?ownerCode=${encodeURIComponent(code)}`);if(!response.ok)return;const data=await response.json();serverTeamLoaded=true;const serverDirect=data.directMembers||[];const serverIndirect=data.indirectMembers||[];document.getElementById('level-b-members').innerHTML=serverDirect.map(memberMarkup).join('');document.getElementById('level-c-members').innerHTML=serverIndirect.map(memberMarkup).join('');document.getElementById('level-b-count').textContent=serverDirect.length;document.getElementById('level-c-count').textContent=serverIndirect.length;document.getElementById('member-count').textContent=`+${serverDirect.length+serverIndirect.length}`;teamSectionCount.querySelector('strong').textContent=serverDirect.length+serverIndirect.length;document.getElementById('team-deposit').textContent=`+${Number(data.totalDeposit||0).toFixed(2)}`}catch(error){}};
 syncUserStats();
 loadTeamFromServer();
 const directActivity=directMembers.reduce((sum,member)=>sum+activity(member),0);
 const indirectActivity=indirectMembers.reduce((sum,member)=>sum+activity(member),0);
-const referralCredits=readJson('sbiPayReferralCredits',[]).filter(item=>item.ownerCode===code&&item.status==='success');
+const referralCredits=readJson('sbiPayUser:' + userId + ':referralCredits',[]).filter(item=>item.ownerCode===code&&item.status==='success');
 const referralCommission=referralCredits.reduce((sum,item)=>sum+Number(item.amount||0),0);
 const totalCommission=directActivity*0.003+indirectActivity*0.002+referralCommission;
 document.getElementById('total-commission').textContent=`+${totalCommission.toFixed(2)}`;
@@ -78,7 +79,7 @@ const refreshTeamMetrics=()=>{
 	document.getElementById('level-c-count').textContent=currentIndirect.length;
 	const currentDirectActivity=currentDirect.reduce((sum,member)=>sum+activity(member),0);
 	const currentIndirectActivity=currentIndirect.reduce((sum,member)=>sum+activity(member),0);
-	const currentReferralCommission=readJson('sbiPayReferralCredits',[]).filter(item=>item.ownerCode===code&&item.status==='success').reduce((sum,item)=>sum+Number(item.amount||0),0);
+	const currentReferralCommission=readJson('sbiPayUser:' + userId + ':referralCredits',[]).filter(item=>item.ownerCode===code&&item.status==='success').reduce((sum,item)=>sum+Number(item.amount||0),0);
 	const currentCommission=currentDirectActivity*0.003+currentIndirectActivity*0.002+currentReferralCommission;
 	document.getElementById('member-count').textContent=`+${currentDirect.length+currentIndirect.length}`;
 	teamSectionCount.querySelector('strong').textContent=currentDirect.length+currentIndirect.length;

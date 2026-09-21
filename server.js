@@ -1,12 +1,14 @@
-const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const express = require('express');
+const cors = require('cors');
 let bcrypt;
 try { bcrypt = require('bcryptjs'); } catch (error) { bcrypt = null; }
 let MongoClient;
 try { ({MongoClient} = require('mongodb')); } catch (error) { MongoClient = null; }
 try { require('dotenv').config(); } catch (error) {}
+const app = express();
 
 const root = __dirname;
 const port = Number(process.env.PORT) || 10000;
@@ -506,38 +508,51 @@ const handleApi = async (request, response, pathname) => {
   return false;
 };
 
-const server = http.createServer((request, response) => {
-  const requestedPath = decodeURIComponent(new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`).pathname);
+app.use(cors({origin: true, credentials: true}));
+app.use(express.json({limit: '1mb'}));
+app.use(express.urlencoded({extended: true}));
+
+app.use((request, response, next) => {
+  const requestedPath = decodeURIComponent(new URL(request.originalUrl || '/', `http://${request.headers.host || 'localhost'}`).pathname);
   if (requestedPath.startsWith('/api/')) {
-    if (request.method === 'OPTIONS') return json(response, 204, {});
-    handleApi(request, response, requestedPath).catch(() => json(response, 500, {error: 'Request failed'}));
+    if (request.method === 'OPTIONS') return response.status(204).end();
+    handleApi(request, response, requestedPath)
+      .catch(() => response.status(500).json({error: 'Request failed'}));
     return;
   }
+  next();
+});
+
+app.use(express.static(root, {
+  index: 'index.html',
+  extensions: ['html'],
+  maxAge: '0'
+}));
+
+app.get('*', (request, response, next) => {
+  const requestedPath = decodeURIComponent(new URL(request.originalUrl || '/', `http://${request.headers.host || 'localhost'}`).pathname);
+  if (requestedPath.startsWith('/api/')) return next();
+
   const relativePath = requestedPath === '/' ? 'index.html' : requestedPath.replace(/^\/+/, '');
   const filePath = path.resolve(root, relativePath);
 
   if (filePath !== root && !filePath.startsWith(`${root}${path.sep}`)) {
-    response.writeHead(403, {'Content-Type': 'text/plain; charset=utf-8'});
-    response.end('Forbidden');
+    response.status(403).type('text/plain').send('Forbidden');
     return;
   }
 
   fs.stat(filePath, (error, stats) => {
     if (error || !stats.isFile()) {
-      response.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
-      response.end('Not found');
+      const defaultPath = path.join(root, 'index.html');
+      response.sendFile(defaultPath, {headers: {'Cache-Control': 'no-cache'}});
       return;
     }
 
-    response.writeHead(200, {
-      'Content-Type': contentTypes[path.extname(filePath).toLowerCase()] || 'application/octet-stream',
-      'Cache-Control': 'no-cache'
-    });
-    fs.createReadStream(filePath).pipe(response);
+    response.sendFile(filePath, {headers: {'Cache-Control': 'no-cache'}});
   });
 });
 
-server.listen(port, '0.0.0.0', () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`SBI PAY server listening on port ${port}`);
 });
 

@@ -47,7 +47,7 @@ const profile=JSON.parse(localStorage.getItem('sbiPayProfile')||'null');
 const buyerName=profile?.username||localStorage.getItem('sbiPayUsername')||'New User';
 const buyerId=profile?.id||localStorage.getItem('sbiPayUserId')||'-';
 let buyerUpi='Not provided';
-try{const buyerUpis=JSON.parse(localStorage.getItem('sbiPayWalletUpi')||'[]').filter(item=>item.enabled!==false);buyerUpi=buyerUpis[0]?.upiId||'Not provided'}catch(error){}
+try{const getUserId=()=>{try{const profile=JSON.parse(localStorage.getItem('sbiPayProfile')||'null');return String(profile?.id || localStorage.getItem('sbiPayUserId') || '').trim()}catch(error){return String(localStorage.getItem('sbiPayUserId') || '').trim()}};const userId=getUserId();const walletKey=userId?`sbiPayUser:${userId}:walletUpi`:'sbiPayGuest:walletUpi';const buyerUpis=JSON.parse(localStorage.getItem(walletKey)||'[]').filter(item=>item.enabled!==false);buyerUpi=buyerUpis[0]?.upiId||'Not provided'}catch(error){}
 document.getElementById('purchase-amount').textContent=`₹ ${amount.toFixed(2)}`;
 document.getElementById('buyer-name').textContent=buyerName;
 document.getElementById('buyer-id').textContent=buyerId;

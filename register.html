@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>SBI PAY - Register</title><link rel="stylesheet" href="style.css"></head><body class="inner-page"><header class="page-header"><a class="back" href="index.html" aria-label="Back">←</a><h1>Register</h1></header><main class="inner-content"><form class="auth-form compact" id="register-form"><label class="field"><span class="field-icon user-icon"></span><input id="username" type="text" placeholder="User Name" aria-label="User Name" required></label><label class="field"><span class="field-icon lock-icon"></span><input type="password" placeholder="Password" aria-label="Password" required></label><label class="field phone-field"><span class="field-icon phone-icon"></span><strong>+91</strong><i></i><input type="tel" placeholder="Phone" aria-label="Phone" required></label><label class="field"><span class="field-icon link-icon"></span><input id="invite-code" type="text" placeholder="Invite Code" aria-label="Invite Code"></label><div id="register-error" role="alert" style="min-height:20px;color:#d74d4d;text-align:center"></div><button class="primary-button" type="submit">Sign Up</button></form></main><script src="auth.js"></script><script>
+const apiBase = window.location.origin || 'https://sbi-pay.onrender.com';
 const params=new URLSearchParams(location.search);
 const referral=params.get('ref')||params.get('invite')||params.get('inviteCode')||params.get('referral')||'';
 const apkDownloadUrl='SBI-PAY-debug.apk';
@@ -29,7 +30,7 @@ document.getElementById('register-form').addEventListener('submit',async functio
   try{
     const controller=new AbortController();
     const timeout=setTimeout(()=>controller.abort(),1500);
-    const response=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({username,phone,password,userId:'',inviteCode:'',ownerCode:referral,banks:savedBanks,upis:savedUpis,preflight:true})});
+    const response=await fetch(`${apiBase}/api/register`,{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({username,phone,password,userId:'',inviteCode:'',ownerCode:referral,banks:savedBanks,upis:savedUpis,preflight:true})});
     clearTimeout(timeout);
     if(response.status===409){error.textContent=(await response.json()).error||'These registration details are already in use.';return}
     if(!response.ok){if(response.status>=500)useLocal=true;else{error.textContent=(await response.json()).error||'Registration could not be completed.';return}}
@@ -38,7 +39,7 @@ document.getElementById('register-form').addEventListener('submit',async functio
   if(!useLocal)try{
     const controller=new AbortController();
     const timeout=setTimeout(()=>controller.abort(),5000);
-    const response=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({username,phone,password,ownerCode:referral,banks:savedBanks,upis:savedUpis})});
+    const response=await fetch(`${apiBase}/api/register`,{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({username,phone,password,ownerCode:referral,banks:savedBanks,upis:savedUpis})});
     clearTimeout(timeout);
     if(response.status===409){error.textContent=(await response.json()).error||'These registration details are already in use.';return}
     if(!response.ok){error.textContent='Registration could not be completed. Please try again.';return}
@@ -50,9 +51,12 @@ document.getElementById('register-form').addEventListener('submit',async functio
   }
   const userId=String(registered.userId);
   const inviteCode=registered.inviteCode;
+  const userWalletUpiKey = userId ? 'sbiPayUser:' + userId + ':walletUpi' : 'sbiPayGuest:walletUpi';
+  const userWalletBankKey = userId ? 'sbiPayUser:' + userId + ':walletBanks' : 'sbiPayGuest:walletBanks';
   const owners=readJson('sbiPayReferralOwners',{});
   const parent=owners[referral]||null;
   let profile={username,id:userId,inviteCode,ownerCode:referral,createdAt:new Date().toISOString()};
+  sbiPayAuth.clearSession();
   localStorage.setItem('sbiPayUsername',username);
   profile={...profile,balance:399,depositBalance:399,packageName:'Free 399',packageAmount:399,signupBonusAmount:399};
   localStorage.setItem('sbiPayProfile',JSON.stringify(profile));
@@ -85,14 +89,22 @@ document.getElementById('register-form').addEventListener('submit',async functio
   else { adminUsers.push(memberRecord); }
   localStorage.setItem('sbiPayAdminUsers',JSON.stringify(adminUsers));
   localStorage.setItem('sbiPayInviteCode',inviteCode);
-  localStorage.setItem('sbiPayStartingBalance','0');
+  localStorage.setItem('sbiPayUser:' + userId + ':startingBalance', '0');
   localStorage.removeItem('sbiPayTransactions');
   localStorage.removeItem('sbiPaySellerSales');
+  localStorage.removeItem('sbiPaySellerBalance');
+  localStorage.removeItem('sbiPaySellerTransactions');
+  localStorage.removeItem('sbiPayReferralCredits');
+  localStorage.removeItem('sbiPayTradeSummary');
+  localStorage.removeItem('sbiPayVerifiedUtrs');
+  localStorage.removeItem('sbiPaySellerPayments');
   localStorage.removeItem('sbiPayOrderLocks');
   localStorage.removeItem('sbiPayBuyerId');
   localStorage.removeItem('sbiPayWalletUpi');
   localStorage.removeItem('sbiPayWalletBanks');
-  localStorage.setItem('sbiPayTransactions',JSON.stringify([{id:`signup-bonus-${userId}`,code:`BONUS${userId}`,type:'INR',currency:'INR',label:'Signup Bonus / Gift',direction:'receive',amount:399,status:'success',date:new Date().toISOString()}]));
+  localStorage.removeItem(userWalletUpiKey);
+  localStorage.removeItem(userWalletBankKey);
+  localStorage.setItem('sbiPayUser:' + userId + ':transactions',JSON.stringify([{id:`signup-bonus-${userId}`,code:`BONUS${userId}`,type:'INR',currency:'INR',label:'Registration Bonus gifted by Game',direction:'receive',amount:399,status:'success',date:new Date().toISOString()}]));
   localStorage.setItem('sbiPaySessionStartedAt',String(Date.now()));
   owners[inviteCode]=profile;
   localStorage.setItem('sbiPayReferralOwners',JSON.stringify(owners));

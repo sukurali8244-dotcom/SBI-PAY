@@ -3,6 +3,16 @@
   const sessionDuration=24*60*60*1000;
   const authKeys=['sbiPayUsername','sbiPayProfile','sbiPayUserId','sbiPayInviteCode','sbiPaySessionStartedAt'];
   const localUsersKey='sbiPayLocalUsers';
+  const legacyUserScopedKeys=['sbiPayTransactions','sbiPayStartingBalance','sbiPayBuyerId','sbiPayOrderLocks','sbiPaySellerSales','sbiPaySellerPayments','sbiPayTradeSummary','sbiPayVerifiedUtrs','sbiPayReferralCredits','sbiPayWalletUpi','sbiPayWalletBanks'];
+  const clearUserScopedStorage=()=>{
+    for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+      const key = localStorage.key(index);
+      if (!key) continue;
+      if (key.startsWith('sbiPayUser:') || key.startsWith('sbiPayTransactions') || legacyUserScopedKeys.includes(key)) {
+        localStorage.removeItem(key);
+      }
+    }
+  };
   const readProfile=()=>{try{return JSON.parse(localStorage.getItem('sbiPayProfile')||'null')}catch(error){return null}};
   const readLocalUsers=()=>{try{const users=JSON.parse(localStorage.getItem(localUsersKey)||'[]');return Array.isArray(users)?users:[]}catch(error){return[]}};
   const normalize=({username='',phone='',upiId='',bankAccount=''}={})=>({username:String(username).trim().toLowerCase(),phone:String(phone).replace(/\D/g,''),upiId:String(upiId).trim().toLowerCase(),bankAccount:String(bankAccount).replace(/\D/g,'')});
@@ -31,7 +41,10 @@
     if(profile)localStorage.setItem('sbiPayProfile',JSON.stringify(profile));
     localStorage.setItem(sessionKey,String(Date.now()));
   };
-  const clearSession=()=>authKeys.forEach(key=>localStorage.removeItem(key));
+  const clearSession=()=>{
+    authKeys.forEach(key=>localStorage.removeItem(key));
+    clearUserScopedStorage();
+  };
   const hasValidSession=()=>{
     const profile=readProfile();
     const startedAt=Number(localStorage.getItem(sessionKey));
