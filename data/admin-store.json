@@ -1,0 +1,173 @@
+{
+  "users": [
+    {
+      "userId": "20001",
+      "username": "demo_member",
+      "phone": "8837022562",
+      "passwordHash": "$2a$10$7Bf37c2p728qAElDXnV02ef4ZBVdCpRJYrmKmuasnyEsxfVlTSTIS",
+      "inviteCode": "SBI20001",
+      "ownerCode": "SBI20000",
+      "isActive": true,
+      "balance": 0,
+      "depositBalance": 0,
+      "packageName": "",
+      "packageAmount": 0,
+      "signupBonusAmount": 0,
+      "status": "enabled",
+      "walletLimit": 0,
+      "createdAt": "2026-09-21T20:31:02.104Z"
+    },
+    {
+      "userId": "20000",
+      "username": "@dmin1",
+      "phone": "8837022561",
+      "passwordHash": "$2a$10$6eSsgTpu1lrWGEyf4.G7xOiXzY/yKCnCtqOpgTtDMPiTErCccLFdC",
+      "inviteCode": "SBI20000",
+      "ownerCode": "",
+      "isActive": true,
+      "balance": 399,
+      "depositBalance": 399,
+      "packageName": "Free 399",
+      "packageAmount": 399,
+      "signupBonusAmount": 399,
+      "status": "enabled",
+      "walletLimit": 0,
+      "createdAt": "2026-09-21T20:31:02.103Z"
+    },
+    {
+      "userId": "20030590",
+      "username": "Amit",
+      "phone": "9876543210",
+      "passwordHash": "f9ccaf480ddf28032c061ab0fb38256b:1698e3931f66a1678506414178c7a276b7719ec4b4cf9547a4dc2bcea11ea8be2f6918e1e6fc54758e4ad68c73b4f5a09b8cb2bbdb3ef42e9e7b7e1edb5c29fa",
+      "inviteCode": "SBI20030590",
+      "ownerCode": "SBI20030000",
+      "upiId": "amit@paytm",
+      "bankAccount": "41029268462",
+      "bankName": "STATE BANK OF INDIA",
+      "bankHolder": "Amit",
+      "bankIfsc": "SBI0005807",
+      "isActive": true,
+      "balance": 1250,
+      "depositBalance": 0,
+      "status": "enabled",
+      "walletLimit": 5000,
+      "createdAt": "2026-09-21T19:59:26.629Z"
+    },
+    {
+      "userId": "20030591",
+      "username": "Rohit",
+      "phone": "9876543211",
+      "passwordHash": "3e083cda004a97a20a7687c258da084e:d30cda1f94d51a6a647c1b17591ab7168e15622cf7fd649a3ccb7fd2fbda6ad67cbd8a7d0a9d39d8b08346a58d8d4488d1cd5a03358d7441db7c8c60a13093d9",
+      "inviteCode": "SBI20030591",
+      "ownerCode": "SBI20030590",
+      "upiId": "rohit@mobikwik",
+      "bankAccount": "50200012345",
+      "bankName": "HDFC BANK",
+      "bankHolder": "Rohit",
+      "bankIfsc": "HDFC0001234",
+      "isActive": true,
+      "balance": 870,
+      "depositBalance": 0,
+      "status": "enabled",
+      "walletLimit": 3500,
+      "createdAt": "2026-09-21T19:59:26.685Z"
+    },
+    {
+      "userId": "20030592",
+      "username": "Sameer",
+      "phone": "9876543212",
+      "passwordHash": "638791927cbfa0037f1da7d4263b22e9:7ae3a14ccfe2cbd7ae01ff88f7decc5d029a142a8ef8b7923e3224bfb858865be9c21bdf01e67811413b1b5f1e19cc257d39abd9aa802d2ec3a850d28438f9d2",
+      "inviteCode": "SBI20030592",
+      "ownerCode": "SBI20030590",
+      "upiId": "sameer@phonepe",
+      "isActive": false,
+      "balance": 0,
+      "depositBalance": 0,
+      "status": "disabled",
+      "walletLimit": 1500,
+      "createdAt": "2026-09-21T19:59:26.738Z"
+    },
+    {
+      "userId": "20030593",
+      "username": "Neha",
+      "phone": "9876543213",
+      "passwordHash": "2a8cfdf7c129d5a66746a3558d5d25b8:d3f4dbaa5fdcde54d3f8be262437f9c412baaaaa756568809b1dfabf9381dd8b890f8f9607c5d9e80bf09f4f368e1aa03e43575c2abd617efc7e769841dbc76d",
+      "inviteCode": "SBI20030593",
+      "ownerCode": "SBI20030591",
+      "bankAccount": "620001234567",
+      "bankName": "ICICI BANK",
+      "bankHolder": "Neha",
+      "bankIfsc": "ICIC0001234",
+      "isActive": true,
+      "balance": 2040,
+      "depositBalance": 0,
+      "status": "enabled",
+      "walletLimit": 4000,
+      "createdAt": "2026-09-21T19:59:26.790Z"
+    }
+  ],
+  "upi": [
+    {
+      "id": "upi-1",
+      "upiId": "amit@paytm",
+      "ownerUserId": "20030590",
+      "ownerName": "Amit",
+      "app": "Paytm",
+      "enabled": true,
+      "risk": false,
+      "min": 50,
+      "max": 5000
+    },
+    {
+      "id": "upi-2",
+      "upiId": "rohit@mobikwik",
+      "ownerUserId": "20030591",
+      "ownerName": "Rohit",
+      "app": "Mobikwik",
+      "enabled": true,
+      "risk": true,
+      "min": 100,
+      "max": 7000
+    },
+    {
+      "id": "upi-3",
+      "upiId": "sameer@phonepe",
+      "ownerUserId": "20030592",
+      "ownerName": "Sameer",
+      "app": "PhonePe",
+      "enabled": false,
+      "risk": false,
+      "min": 20,
+      "max": 2500
+    }
+  ],
+  "payments": [
+    {
+      "id": "pay-1",
+      "userId": "20030590",
+      "amount": 1500,
+      "type": "deposit",
+      "status": "success",
+      "channel": "Paytm",
+      "createdAt": "2026-09-21T19:59:26.790Z"
+    },
+    {
+      "id": "pay-2",
+      "userId": "20030591",
+      "amount": 820,
+      "type": "deposit",
+      "status": "pending",
+      "channel": "Mobikwik",
+      "createdAt": "2026-09-21T19:59:26.790Z"
+    },
+    {
+      "id": "pay-3",
+      "userId": "20030593",
+      "amount": 960,
+      "type": "deposit",
+      "status": "success",
+      "channel": "Freecharge",
+      "createdAt": "2026-09-21T19:59:26.790Z"
+    }
+  ]
+}

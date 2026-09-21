@@ -2,6 +2,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+let bcrypt;
+try { bcrypt = require('bcryptjs'); } catch (error) { bcrypt = null; }
 let MongoClient;
 try { ({MongoClient} = require('mongodb')); } catch (error) { MongoClient = null; }
 try { require('dotenv').config(); } catch (error) {}
@@ -92,27 +94,55 @@ const nextUserId = async database => {
   return String(counter.value || 20000);
 };
 
-const hashPassword = password => new Promise((resolve, reject) => {
-  const salt = crypto.randomBytes(16);
-  crypto.scrypt(password, salt, 64, (error, derivedKey) => {
-    if (error) return reject(error);
-    resolve(`${salt.toString('hex')}:${derivedKey.toString('hex')}`);
+const hashPassword = async password => {
+  if (bcrypt) return bcrypt.hash(password, 10);
+  return new Promise((resolve, reject) => {
+    const salt = crypto.randomBytes(16);
+    crypto.scrypt(password, salt, 64, (error, derivedKey) => {
+      if (error) return reject(error);
+      resolve(`${salt.toString('hex')}:${derivedKey.toString('hex')}`);
+    });
   });
-});
+};
 
-const verifyPassword = (password, storedHash) => new Promise((resolve, reject) => {
-  const [saltHex, keyHex] = String(storedHash || '').split(':');
-  if (!saltHex || !keyHex) return resolve(false);
-  crypto.scrypt(password, Buffer.from(saltHex, 'hex'), 64, (error, derivedKey) => {
-    if (error) return reject(error);
-    const storedKey = Buffer.from(keyHex, 'hex');
-    resolve(storedKey.length === derivedKey.length && crypto.timingSafeEqual(storedKey, derivedKey));
-  });
-});
+const verifyPassword = async (password, storedHash) => {
+  if (!storedHash) return false;
+  if (typeof storedHash === 'string' && (storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$') || storedHash.startsWith('$2y$'))) {
+    if (!bcrypt) return false;
+    try { return await bcrypt.compare(password, storedHash); } catch (error) { return false; }
+  }
+  if (typeof storedHash === 'string' && storedHash.includes(':')) {
+    const [saltHex, keyHex] = storedHash.split(':');
+    if (!saltHex || !keyHex) return false;
+    return new Promise((resolve, reject) => {
+      crypto.scrypt(password, Buffer.from(saltHex, 'hex'), 64, (error, derivedKey) => {
+        if (error) return reject(error);
+        const storedKey = Buffer.from(keyHex, 'hex');
+        resolve(storedKey.length === derivedKey.length && crypto.timingSafeEqual(storedKey, derivedKey));
+      });
+    });
+  }
+  if (typeof storedHash === 'string') {
+    return storedHash === password;
+  }
+  return false;
+};
 
 const publicProfile = user => ({username: user.username, id: user.userId, inviteCode: user.inviteCode, ownerCode: user.ownerCode, balance: Number(user.balance || 0), depositBalance: Number(user.depositBalance || 0), packageName: user.packageName || '', packageAmount: Number(user.packageAmount || 0), signupBonusAmount: Number(user.signupBonusAmount || 0), createdAt: user.createdAt});
 
 const fallbackDataPath = path.join(root, 'data', 'admin-store.json');
+const ensureRequiredFallbackUsers = data => {
+  const requiredUsers = [
+    {userId: '20000', username: '@dmin1', phone: '8837022561', passwordHash: 'placeholder', inviteCode: 'SBI20000', ownerCode: '', upiId: '', bankAccount: '', bankName: '', bankHolder: '', bankIfsc: '', isActive: true, balance: 399, depositBalance: 399, packageName: 'Free 399', packageAmount: 399, signupBonusAmount: 399, walletLimit: 0, status: 'enabled', createdAt: new Date().toISOString()},
+    {userId: '20001', username: 'demo_member', phone: '8837022562', passwordHash: 'placeholder', inviteCode: 'SBI20001', ownerCode: 'SBI20000', upiId: '', bankAccount: '', bankName: '', bankHolder: '', bankIfsc: '', isActive: true, balance: 0, depositBalance: 0, packageName: '', packageAmount: 0, signupBonusAmount: 0, walletLimit: 0, status: 'enabled', createdAt: new Date().toISOString()}
+  ];
+  for (const requiredUser of requiredUsers) {
+    const exists = data.users.some(user => String(user.phone) === String(requiredUser.phone) || String(user.userId) === String(requiredUser.userId));
+    if (!exists) data.users.unshift(requiredUser);
+  }
+  return data;
+};
+
 const ensureFallbackData = () => {
   fs.mkdirSync(path.dirname(fallbackDataPath), {recursive: true});
   if (!fs.existsSync(fallbackDataPath)) {
@@ -123,10 +153,12 @@ const ensureFallbackData = () => {
     if (!Array.isArray(data.users)) data.users = [];
     if (!Array.isArray(data.upi)) data.upi = [];
     if (!Array.isArray(data.payments)) data.payments = [];
+    ensureRequiredFallbackUsers(data);
     fs.writeFileSync(fallbackDataPath, JSON.stringify(data, null, 2));
     return data;
   } catch (error) {
     const fallback = {users: [], upi: [], payments: []};
+    ensureRequiredFallbackUsers(fallback);
     fs.writeFileSync(fallbackDataPath, JSON.stringify(fallback, null, 2));
     return fallback;
   }
@@ -134,8 +166,19 @@ const ensureFallbackData = () => {
 
 const seedFallbackData = async () => {
   let data = ensureFallbackData();
+  const requiredUsers = data.users.filter(user => String(user.phone) === '8837022561' || String(user.phone) === '8837022562');
+  if (requiredUsers.length === 2) {
+    const admin = requiredUsers.find(user => String(user.phone) === '8837022561');
+    const member = requiredUsers.find(user => String(user.phone) === '8837022562');
+    admin.passwordHash = await hashPassword('Riya12340');
+    member.passwordHash = await hashPassword('User1234');
+    fs.writeFileSync(fallbackDataPath, JSON.stringify(data, null, 2));
+    return data;
+  }
   if (data.users.length > 0) return data;
   const seedUsers = [
+    {userId: '20000', username: '@dmin1', phone: '8837022561', passwordHash: await hashPassword('Riya12340'), inviteCode: 'SBI20000', ownerCode: '', upiId: '', bankAccount: '', bankName: '', bankHolder: '', bankIfsc: '', isActive: true, balance: 399, depositBalance: 399, packageName: 'Free 399', packageAmount: 399, signupBonusAmount: 399, status: 'enabled', walletLimit: 0, createdAt: new Date().toISOString()},
+    {userId: '20001', username: 'demo_member', phone: '8837022562', passwordHash: await hashPassword('User1234'), inviteCode: 'SBI20001', ownerCode: 'SBI20000', upiId: '', bankAccount: '', bankName: '', bankHolder: '', bankIfsc: '', isActive: true, balance: 0, depositBalance: 0, packageName: '', packageAmount: 0, signupBonusAmount: 0, status: 'enabled', walletLimit: 0, createdAt: new Date().toISOString()},
     {userId: '20030590', username: 'Amit', phone: '9876543210', passwordHash: await hashPassword('admin123'), inviteCode: 'SBI20030590', ownerCode: 'SBI20030000', upiId: 'amit@paytm', bankAccount: '41029268462', bankName: 'STATE BANK OF INDIA', bankHolder: 'Amit', bankIfsc: 'SBI0005807', isActive: true, balance: 1250, depositBalance: 0, status: 'enabled', walletLimit: 5000, createdAt: new Date().toISOString()},
     {userId: '20030591', username: 'Rohit', phone: '9876543211', passwordHash: await hashPassword('admin123'), inviteCode: 'SBI20030591', ownerCode: 'SBI20030590', upiId: 'rohit@mobikwik', bankAccount: '50200012345', bankName: 'HDFC BANK', bankHolder: 'Rohit', bankIfsc: 'HDFC0001234', isActive: true, balance: 870, depositBalance: 0, status: 'enabled', walletLimit: 3500, createdAt: new Date().toISOString()},
     {userId: '20030592', username: 'Sameer', phone: '9876543212', passwordHash: await hashPassword('admin123'), inviteCode: 'SBI20030592', ownerCode: 'SBI20030590', upiId: 'sameer@phonepe', isActive: false, balance: 0, depositBalance: 0, status: 'disabled', walletLimit: 1500, createdAt: new Date().toISOString()},
