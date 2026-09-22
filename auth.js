@@ -18,6 +18,13 @@
   const normalize=({username='',phone='',upiId='',bankAccount=''}={})=>({username:String(username).trim().toLowerCase(),phone:String(phone).replace(/\D/g,''),upiId:String(upiId).trim().toLowerCase(),bankAccount:String(bankAccount).replace(/\D/g,'')});
   const digest=async value=>{const bytes=new TextEncoder().encode(String(value));const hash=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(hash)).map(byte=>byte.toString(16).padStart(2,'0')).join('')};
   const localProfile=user=>({username:user.displayUsername||user.username,id:user.userId,inviteCode:user.inviteCode,ownerCode:user.ownerCode,balance:399,depositBalance:399,packageName:'Free 399',packageAmount:399,signupBonusAmount:399,createdAt:user.createdAt});
+  const nextLocalUserId=existingUsers=>{
+    const numericIds=Array.isArray(existingUsers)?existingUsers
+      .map(user => Number(String(user.userId || user.id || '').replace(/\D/g,'')))
+      .filter(value => Number.isFinite(value) && value > 0):[];
+    const currentMax=numericIds.length ? Math.max(...numericIds) : 20000;
+    return String(currentMax + 1);
+  };
   const localRegister=async ({username,phone,password,ownerCode='',upiId='',bankAccount=''})=>{
     const normalized=normalize({username,phone,upiId,bankAccount});
     const users=readLocalUsers();
@@ -26,7 +33,7 @@
     if(users.some(user=>normalize(user).phone===normalized.phone))throw new Error('This number is already registered.');
     if(normalized.upiId&&users.some(user=>normalize(user).upiId===normalized.upiId))throw new Error('This UPI ID is already registered.');
     if(normalized.bankAccount&&users.some(user=>normalize(user).bankAccount===normalized.bankAccount))throw new Error('This bank account is already registered.');
-    const userId=String(20040000+users.length+1);
+    const userId=nextLocalUserId(users);
     const user={...normalized,displayUsername:String(username).trim(),passwordHash:await digest(password),userId,inviteCode:`SBI${userId}`,ownerCode,createdAt:new Date().toISOString(),isActive:true};
     users.push(user);localStorage.setItem(localUsersKey,JSON.stringify(users));
     return {user:localProfile(user),userId:user.userId,inviteCode:user.inviteCode,ownerCode:user.ownerCode};
